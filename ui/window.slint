@@ -1,0 +1,58 @@
+import { HorizontalBox, Button, ListView, VerticalBox, ProgressIndicator } from "std-widgets.slint";
+
+export struct TorrentInfo {
+    name: string,
+    total_bytes: int,
+    downloaded_bytes: int}
+
+export component MainWindow inherits Window {
+    min-height: 350px;
+    min-width: 400px;
+    VerticalBox {
+        HorizontalBox {
+            Button {
+                text: "Add Torrent";
+            }
+
+            Button {
+                text: "Settings";
+            }
+        }
+
+        ListView {
+            in property <[TorrentInfo]> info;
+            for torrent in [
+                { name: "test1", total_bytes: 100, downloaded_bytes: 42 },
+                { name: "test2", total_bytes: 256, downloaded_bytes: 42 },
+                { name: "test3", total_bytes: 128, downloaded_bytes: 42 },
+            ]: Rectangle {
+                border-width: 1px;
+                border-color: grey;
+                height: 20px;
+                width: parent.width;
+                Text {
+                    x: 3px;
+                    text: torrent.name;
+                }
+
+                ProgressIndicator {
+                    progress: torrent.downloaded_bytes / torrent.total_bytes;
+                }
+            }
+        }
+
+        ListView {
+            in property <[string]> peers;
+            for peer in ["127.0.0.1", "127.0.0.2", "127.0.0.3"]: Rectangle {
+                border-width: 1px;
+                border-color: grey;
+                height: 20px;
+                width: parent.width;
+                Text {
+                    x: 3px;
+                    text: peer;
+                }
+            }
+        }
+    }
+}
