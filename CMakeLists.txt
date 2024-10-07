@@ -42,7 +42,7 @@ if (NOT LibtorrentRasterbar_FOUND)
     )
     FetchContent_MakeAvailable(LibtorrentRasterbar)
 endif (NOT LibtorrentRasterbar_FOUND)
-target_link_libraries(microtorrent PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+target_link_libraries(microtorrent PRIVATE LibtorrentRasterbar)
 
 # On Windows, copy the Slint DLL next to the application binary so that it's found.
 if (WIN32)
