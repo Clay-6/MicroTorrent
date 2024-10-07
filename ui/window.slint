@@ -1,4 +1,4 @@
-import { HorizontalBox, Button, ListView, VerticalBox, ProgressIndicator } from "std-widgets.slint";
+import { HorizontalBox, Button, ListView, VerticalBox, ProgressIndicator, GroupBox } from "std-widgets.slint";
 
 export struct TorrentInfo {
     name: string,
@@ -22,35 +22,47 @@ export component MainWindow inherits Window {
         ListView {
             in property <[TorrentInfo]> info;
             for torrent in [
-                { name: "test1", total_bytes: 100, downloaded_bytes: 42 },
-                { name: "test2", total_bytes: 256, downloaded_bytes: 42 },
-                { name: "test3", total_bytes: 128, downloaded_bytes: 42 },
+                { name: "Short Name", total_bytes: 100, downloaded_bytes: 42 },
+                {
+                    name: "Really long name just to make sure that this works properly",
+                    total_bytes: 256,
+                    downloaded_bytes: 42
+                },
+                { name: "test", total_bytes: 128, downloaded_bytes: 42 },
             ]: Rectangle {
                 border-width: 1px;
                 border-color: grey;
                 height: 20px;
                 width: parent.width;
-                Text {
+                text := Text {
                     x: 3px;
                     text: torrent.name;
+                    width: parent.width / 2 - 3px;
+                    overflow: elide;
                 }
 
                 ProgressIndicator {
+                    x: parent.width / 2;
                     progress: torrent.downloaded_bytes / torrent.total_bytes;
+                    height: parent.height - 2px;
+                    width: parent.width / 2;
                 }
             }
         }
 
-        ListView {
-            in property <[string]> peers;
-            for peer in ["127.0.0.1", "127.0.0.2", "127.0.0.3"]: Rectangle {
-                border-width: 1px;
-                border-color: grey;
-                height: 20px;
-                width: parent.width;
-                Text {
-                    x: 3px;
-                    text: peer;
+        GroupBox {
+            title: "Connected peers";
+            ListView {
+                in property <[string]> peers;
+                for peer in ["127.0.0.1", "127.0.0.2", "127.0.0.3"]: Rectangle {
+                    border-width: 1px;
+                    border-color: grey;
+                    height: 20px;
+                    width: parent.width;
+                    Text {
+                        x: 3px;
+                        text: peer;
+                    }
                 }
             }
         }
