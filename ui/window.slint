@@ -3,7 +3,8 @@ import { HorizontalBox, Button, ListView, VerticalBox, ProgressIndicator, GroupB
 export struct TorrentInfo {
     name: string,
     total_bytes: int,
-    downloaded_bytes: int}
+    downloaded_bytes: int,
+}
 
 export component MainWindow inherits Window {
     min-height: 350px;
@@ -34,13 +35,17 @@ export component MainWindow inherits Window {
                 border-color: grey;
                 height: 20px;
                 width: parent.width;
-                text := Text {
+                
+                // Torrent name
+                Text {
                     x: 3px;
                     text: torrent.name;
-                    width: parent.width / 2 - 3px;
+                    width: parent.width / 2 - 5px;
                     overflow: elide;
                 }
 
+
+                // Torrent progress
                 ProgressIndicator {
                     x: parent.width / 2;
                     progress: torrent.downloaded_bytes / torrent.total_bytes;
