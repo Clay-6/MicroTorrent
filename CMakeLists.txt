@@ -32,20 +32,19 @@ slint_target_sources(microtorrent ui/window.slint)
 target_link_libraries(microtorrent PRIVATE Slint::Slint)
 
 # Get libtorrent
-find_package(LibtorrentRasterbar QUIET)
-if (NOT LibtorrentRasterbar_FOUND)
+find_package(torrent-rasterbar QUIET)
+if (NOT torrent-rasterbar_FOUND)
     message("libtorrent could not be located in the CMake module search path. Downloading it from Git & building it locally")
     FetchContent_Declare(
-        LibtorrentRasterbar
+        torrent-rasterbar
         GIT_REPOSITORY https://github.com/arvidn/libtorrent.git
         GIT_TAG v2.0.10
     )
-    FetchContent_MakeAvailable(LibtorrentRasterbar)
-endif (NOT LibtorrentRasterbar_FOUND)
-target_link_libraries(microtorrent PRIVATE LibtorrentRasterbar)
+    FetchContent_MakeAvailable(torrent-rasterbar)
+endif (NOT torrent-rasterbar_FOUND)
+target_link_libraries(microtorrent PRIVATE torrent-rasterbar)
 
 # On Windows, copy the Slint DLL next to the application binary so that it's found.
 if (WIN32)
     add_custom_command(TARGET microtorrent POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:microtorrent> $<TARGET_FILE_DIR:microtorrent> COMMAND_EXPAND_LISTS)
 endif()
-
