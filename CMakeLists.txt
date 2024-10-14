@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(source_files
-    main.cpp)
+    main.cpp
+    backend.cpp)
 
 list (TRANSFORM source_files PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
