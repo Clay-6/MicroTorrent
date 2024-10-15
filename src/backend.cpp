@@ -4,7 +4,7 @@
 #include <fstream>
 #include <libtorrent/read_resume_data.hpp>
 
-std::string storage_dir() {
+std::string storage_dir() noexcept {
     std::string root_dir;
 #ifdef _WIN32
     root_dir = getenv("APPDATA");
@@ -16,7 +16,7 @@ std::string storage_dir() {
     return root_dir;
 }
 
-std::vector<lt::add_torrent_params> resume_torrents() {
+std::vector<lt::add_torrent_params> resume_torrents() noexcept {
     std::vector<lt::add_torrent_params> torrents;
     std::filesystem::directory_iterator dir(storage_dir() + "/resume-files");
     for (const std::filesystem::directory_entry& entry : dir) {

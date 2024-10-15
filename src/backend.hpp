@@ -8,8 +8,8 @@
 ///
 /// ~/.microtorrent on Linux, and %USERPROFILE% on Windows
 /// @return The storage directory path as a string
-std::string storage_dir();
+std::string storage_dir() noexcept;
 
 /// @brief Resume torrents that have been saved previously
 /// @return A vector of the torrents which were resumed, this may be empty
-std::vector<lt::add_torrent_params> resume_torrents();
+std::vector<lt::add_torrent_params> resume_torrents() noexcept;
