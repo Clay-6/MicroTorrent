@@ -17,8 +17,12 @@ std::string storage_dir() noexcept {
 }
 
 std::vector<lt::add_torrent_params> resume_torrents() noexcept {
+    std::string resume_dir = storage_dir() + "/resume-files";
     std::vector<lt::add_torrent_params> torrents;
-    std::filesystem::directory_iterator dir(storage_dir() + "/resume-files");
+    if (!std::filesystem::exists(resume_dir)) {
+        std::filesystem::create_directory(resume_dir);
+    }
+    std::filesystem::directory_iterator dir(resume_dir);
     for (const std::filesystem::directory_entry& entry : dir) {
         std::ifstream ifs(entry.path(), std::ios_base::binary);
         ifs.unsetf(std::ios_base::skipws);

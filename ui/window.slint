@@ -22,6 +22,7 @@ export component MainWindow inherits Window {
 
         ListView {
             in property <[TorrentInfo]> info;
+            max-height: 70% * parent.height;
             for torrent in [
                 { name: "Short Name", total_bytes: 100, downloaded_bytes: 42 },
                 {
@@ -44,9 +45,9 @@ export component MainWindow inherits Window {
                     overflow: elide;
                 }
 
-
                 // Torrent progress
                 ProgressIndicator {
+                    accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
                     x: parent.width / 2;
                     progress: torrent.downloaded_bytes / torrent.total_bytes;
                     height: parent.height - 2px;
