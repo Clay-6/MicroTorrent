@@ -20,38 +20,41 @@ export component MainWindow inherits Window {
             }
         }
 
-        ListView {
-            in property <[TorrentInfo]> info;
-            max-height: 70% * parent.height;
-            for torrent in [
-                { name: "Short Name", total_bytes: 100, downloaded_bytes: 42 },
-                {
-                    name: "Really long name just to make sure that this works properly",
-                    total_bytes: 256,
-                    downloaded_bytes: 42
-                },
-                { name: "test", total_bytes: 128, downloaded_bytes: 42 },
-            ]: Rectangle {
-                border-width: 1px;
-                border-color: grey;
-                height: 20px;
-                width: parent.width;
+        GroupBox {
+            title: "Torrents";
+            ListView {
+                in property <[TorrentInfo]> info;
+                max-height: 70% * root.height;
+                for torrent in [
+                    { name: "Short Name", total_bytes: 100, downloaded_bytes: 42 },
+                    {
+                        name: "Really long name just to make sure that this works properly",
+                        total_bytes: 256,
+                        downloaded_bytes: 42
+                    },
+                    { name: "test", total_bytes: 128, downloaded_bytes: 42 },
+                ]: Rectangle {
+                    border-width: 1px;
+                    border-color: grey;
+                    height: 20px;
+                    width: parent.width;
                 
                 // Torrent name
                 Text {
-                    x: 3px;
-                    text: torrent.name;
-                    width: parent.width / 2 - 5px;
-                    overflow: elide;
-                }
+                        x: 3px;
+                        text: torrent.name;
+                        width: parent.width / 2 - 5px;
+                        overflow: elide;
+                    }
 
                 // Torrent progress
                 ProgressIndicator {
-                    accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
-                    x: parent.width / 2;
-                    progress: torrent.downloaded_bytes / torrent.total_bytes;
-                    height: parent.height - 2px;
-                    width: parent.width / 2;
+                        accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
+                        x: parent.width / 2;
+                        progress: torrent.downloaded_bytes / torrent.total_bytes;
+                        height: parent.height - 2px;
+                        width: parent.width / 2;
+                    }
                 }
             }
         }
