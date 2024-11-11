@@ -1,4 +1,4 @@
-set shell := ["pwsh.exe", "-c"]
+set shell := ["powershell.exe", "-c"]
 
 build:
     cmake --build build
