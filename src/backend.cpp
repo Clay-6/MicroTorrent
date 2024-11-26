@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <libtorrent/read_resume_data.hpp>
+#include <libtorrent/write_resume_data.hpp>
 
 std::string storage_dir() noexcept {
     std::string root_dir;
@@ -17,6 +18,12 @@ std::string storage_dir() noexcept {
 }
 
 namespace fs = std::filesystem;
+
+std::vector<char> load_file(const char* filename) {
+    std::ifstream ifs(filename, std::ios_base::binary);
+    ifs.unsetf(std::ios_base::skipws);
+    return {std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
+}
 
 std::vector<lt::add_torrent_params> resume_torrents() noexcept {
     std::string resume_dir = storage_dir() + "/resume-files";
