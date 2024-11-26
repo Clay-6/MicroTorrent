@@ -14,13 +14,14 @@
 #include <libtorrent/torrent_status.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <thread>
+#include "backend.hpp"
 
 namespace {
 
     using clk = std::chrono::steady_clock;
 
-    // return the name of a torrent status enum
-    char const* state(lt::torrent_status::state_t s) {
+    /// @brief return the name of a torrent status enum
+    char const *state(lt::torrent_status::state_t s) {
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
@@ -46,13 +47,6 @@ namespace {
 #endif
     }
 
-    std::vector<char> load_file(char const* filename) {
-        std::ifstream ifs(filename, std::ios_base::binary);
-        ifs.unsetf(std::ios_base::skipws);
-        return {std::istream_iterator<char>(ifs),
-                std::istream_iterator<char>()};
-    }
-
     // set when we're exiting
     std::atomic<bool> shut_down{false};
 
@@ -60,27 +54,27 @@ namespace {
 
 }  // anonymous namespace
 
-int main(int argc, char const* argv[]) try {
+int main(int argc, char const *argv[]) try {
     if (argc != 2) {
         std::cerr << "usage: " << argv[0] << " <magnet-url>" << std::endl;
         return 1;
     }
 
     // load session parameters
-    auto session_params = load_file(".session");
+    auto session_params = mt::load_file(".session");
     lt::session_params params = session_params.empty()
-                                    ? lt::session_params()
-                                    : lt::read_session_params(session_params);
+                                ? lt::session_params()
+                                : lt::read_session_params(session_params);
     params.settings.set_int(lt::settings_pack::alert_mask,
                             lt::alert_category::error |
-                                lt::alert_category::storage |
-                                lt::alert_category::status);
+                            lt::alert_category::storage |
+                            lt::alert_category::status);
 
     lt::session ses(params);
     clk::time_point last_save_resume = clk::now();
 
     // load resume data from disk and pass it in as we add the magnet link
-    auto buf = load_file(".resume_file");
+    auto buf = mt::load_file(".resume_file");
 
     lt::add_torrent_params magnet = lt::parse_magnet_uri(argv[1]);
     if (buf.size()) {
@@ -99,7 +93,7 @@ int main(int argc, char const* argv[]) try {
     // set when we're exiting
     bool done = false;
     for (;;) {
-        std::vector<lt::alert*> alerts;
+        std::vector<lt::alert *> alerts;
         ses.pop_alerts(&alerts);
 
         if (shut_down) {
@@ -107,13 +101,13 @@ int main(int argc, char const* argv[]) try {
             auto const handles = ses.get_torrents();
             if (handles.size() == 1) {
                 handles[0].save_resume_data(
-                    lt::torrent_handle::only_if_modified |
-                    lt::torrent_handle::save_info_dict);
+                        lt::torrent_handle::only_if_modified |
+                        lt::torrent_handle::save_info_dict);
                 done = true;
             }
         }
 
-        for (lt::alert const* a : alerts) {
+        for (lt::alert const *a: alerts) {
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
                 h = at->handle;
             }
@@ -148,7 +142,7 @@ int main(int argc, char const* argv[]) try {
 
                 // we only have a single torrent, so we know which one
                 // the status is for
-                lt::torrent_status const& s = st->status[0];
+                lt::torrent_status const &s = st->status[0];
                 std::cout << '\r' << state(s.state) << ' '
                           << (s.download_payload_rate / 1000) << " kB/s "
                           << (s.total_done / 1000) << " kB ("
@@ -171,7 +165,7 @@ int main(int argc, char const* argv[]) try {
         }
     }
 
-done:
+    done:
     std::cout << "\nsaving session state" << std::endl;
     {
         std::ofstream of(".session", std::ios_base::binary);
@@ -182,6 +176,6 @@ done:
     }
 
     std::cout << "\ndone, shutting down" << std::endl;
-} catch (std::exception& e) {
+} catch (std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
 }
