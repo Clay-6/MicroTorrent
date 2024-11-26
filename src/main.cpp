@@ -61,7 +61,7 @@ int main(int argc, char const *argv[]) try {
     }
 
     // load session parameters
-    auto session_params = mt::load_file(".session");
+    auto session_params = mt::load_file((mt::storage_dir() + ".session").c_str());
     lt::session_params params = session_params.empty()
                                 ? lt::session_params()
                                 : lt::read_session_params(session_params);
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[]) try {
     clk::time_point last_save_resume = clk::now();
 
     // load resume data from disk and pass it in as we add the magnet link
-    auto buf = mt::load_file(".resume_file");
+    auto buf = mt::load_file((mt::storage_dir() + "/resume_files/.resume_file").c_str());
 
     lt::add_torrent_params magnet = lt::parse_magnet_uri(argv[1]);
     if (buf.size()) {
