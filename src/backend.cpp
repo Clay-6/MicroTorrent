@@ -53,6 +53,14 @@ namespace mt {
         return torrents;
     }
 
+    void save_torrent_data(const lt::save_resume_data_alert *alert) {
+        std::string path = storage_dir() + "/resume-files" + alert->handle.info_hash().to_string() + ".resume_file";
+        std::ofstream of(path, std::ios_base::binary);
+        of.unsetf(std::ios_base::skipws);
+        auto const b = write_resume_data_buf(alert->params);
+        of.write(b.data(), int(b.size()));
+    }
+
     char const *state(lt::torrent_status::state_t s) {
 #ifdef __clang__
 #pragma clang diagnostic push

@@ -5,6 +5,7 @@
 #include <string_view>
 #include <vector>
 #include <libtorrent/torrent_status.hpp>
+#include <libtorrent/alert_types.hpp>
 
 namespace mt {
 /// @brief Return the directory in which MicroTorrent will store all its data
@@ -26,4 +27,6 @@ namespace mt {
     /// @brief return the name of a torrent status enum
     /// @return The string form for the state provided
     char const *state(lt::torrent_status::state_t s);
+
+    void save_torrent_data(const lt::save_resume_data_alert *alert);
 } // namespace mt
