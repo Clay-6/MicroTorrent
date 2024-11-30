@@ -90,7 +90,6 @@ int main(int argc, char const *argv[]) try {
             if (auto alert = lt::alert_cast<lt::torrent_finished_alert>(a)) {
                 alert->handle.save_resume_data(lt::torrent_handle::only_if_modified |
                                                lt::torrent_handle::save_info_dict);
-                done = true;
             }
             if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
                 auto h = alert->handle;
