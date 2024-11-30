@@ -35,7 +35,7 @@ int main(int argc, char const *argv[]) try {
     }
 
     // load session parameters
-    auto session_params = mt::load_file((mt::storage_dir() + ".session").c_str());
+    auto session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
     lt::session_params params = session_params.empty()
                                 ? lt::session_params()
                                 : lt::read_session_params(session_params);
@@ -144,7 +144,7 @@ int main(int argc, char const *argv[]) try {
     done:
     std::cout << "\nsaving session state" << std::endl;
     {
-        std::ofstream of(".session", std::ios_base::binary);
+        std::ofstream of(mt::storage_dir() + "/.session", std::ios_base::binary);
         of.unsetf(std::ios_base::skipws);
         auto const b = write_session_params_buf(ses.session_state(),
                                                 lt::save_state_flags_t::all());
