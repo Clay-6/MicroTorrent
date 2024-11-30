@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <libtorrent/torrent_status.hpp>
 
 namespace mt {
 /// @brief Return the directory in which MicroTorrent will store all its data
@@ -21,4 +22,8 @@ namespace mt {
 /// @return A vector of the bytes making up the requested file. This
 /// will be empty if the file is not found
     std::vector<char> load_file(const char *path);
+
+    /// @brief return the name of a torrent status enum
+    /// @return The string form for the state provided
+    char const *state(lt::torrent_status::state_t s);
 } // namespace mt

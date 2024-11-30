@@ -52,4 +52,28 @@ namespace mt {
 
         return torrents;
     }
-} // namespace mt
+
+    char const *state(lt::torrent_status::state_t s) {
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+#endif
+        switch (s) {
+            case lt::torrent_status::checking_files:
+                return "checking";
+            case lt::torrent_status::downloading_metadata:
+                return "dl metadata";
+            case lt::torrent_status::downloading:
+                return "downloading";
+            case lt::torrent_status::finished:
+                return "finished";
+            case lt::torrent_status::seeding:
+                return "seeding";
+            case lt::torrent_status::checking_resume_data:
+                return "checking resume";
+            default:
+                return "<>";
+        }
+
+    } // namespace mt
+}

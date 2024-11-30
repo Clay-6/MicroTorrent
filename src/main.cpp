@@ -4,8 +4,6 @@
 #include <iostream>
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
-#include <libtorrent/bencode.hpp>
-#include <libtorrent/error_code.hpp>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/read_resume_data.hpp>
 #include <libtorrent/session.hpp>
@@ -17,35 +15,11 @@
 #include "backend.hpp"
 
 namespace {
-
     using clk = std::chrono::steady_clock;
 
-    /// @brief return the name of a torrent status enum
-    char const *state(lt::torrent_status::state_t s) {
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
-#endif
-        switch (s) {
-            case lt::torrent_status::checking_files:
-                return "checking";
-            case lt::torrent_status::downloading_metadata:
-                return "dl metadata";
-            case lt::torrent_status::downloading:
-                return "downloading";
-            case lt::torrent_status::finished:
-                return "finished";
-            case lt::torrent_status::seeding:
-                return "seeding";
-            case lt::torrent_status::checking_resume_data:
-                return "checking resume";
-            default:
-                return "<>";
-        }
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
-    }
 
     // set when we're exiting
     std::atomic<bool> shut_down{false};
@@ -143,7 +117,7 @@ int main(int argc, char const *argv[]) try {
                 // we only have a single torrent, so we know which one
                 // the status is for
                 lt::torrent_status const &s = st->status[0];
-                std::cout << '\r' << state(s.state) << ' '
+                std::cout << '\r' << mt::state(s.state) << ' '
                           << (s.download_payload_rate / 1000) << " kB/s "
                           << (s.total_done / 1000) << " kB ("
                           << (s.progress_ppm / 10000) << "%) downloaded ("
