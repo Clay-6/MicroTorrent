@@ -48,19 +48,21 @@ int main(int argc, char const *argv[]) try {
     clk::time_point last_save_resume = clk::now();
 
     // load resume data from disk and pass it in as we add the magnet link
-    auto buf = mt::load_file((mt::storage_dir() + "/resume_files/.resume_file").c_str());
+    auto resumes = mt::resume_torrents();
 
     lt::add_torrent_params magnet = lt::parse_magnet_uri(argv[1]);
-    if (!buf.empty()) {
-        lt::add_torrent_params atp = lt::read_resume_data(buf);
-        if (atp.info_hashes == magnet.info_hashes) magnet = std::move(atp);
+    if (!resumes.empty()) {
+        for (auto atp: resumes)
+            if (atp.info_hashes == magnet.info_hashes) { magnet = std::move(atp); }
     }
     magnet.save_path = ".";  // save in current dir
-    ses.async_add_torrent(std::move(magnet));
 
-    // this is the handle we'll set once we get the notification of it being
-    // added
-    lt::torrent_handle h;
+    // add the passed magnet link and all the resumable torrents
+    ses.async_add_torrent(std::move(magnet));
+    for (auto atp: resumes) ses.async_add_torrent(std::move(atp));
+
+    // We'll add the handles here once they've been added
+    std::vector<lt::torrent_handle> handles;
 
     std::signal(SIGINT, &sighandler);
 
@@ -72,9 +74,8 @@ int main(int argc, char const *argv[]) try {
 
         if (shut_down) {
             shut_down = false;
-            auto const handles = ses.get_torrents();
-            if (handles.size() == 1) {
-                handles[0].save_resume_data(
+            for (auto const &h: handles) {
+                h.save_resume_data(
                         lt::torrent_handle::only_if_modified |
                         lt::torrent_handle::save_info_dict);
                 done = true;
@@ -83,15 +84,16 @@ int main(int argc, char const *argv[]) try {
 
         for (lt::alert const *a: alerts) {
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
-                h = at->handle;
+                handles.push_back(at->handle);
             }
             // if we receive the finished alert or an error, we're done
-            if (lt::alert_cast<lt::torrent_finished_alert>(a)) {
-                h.save_resume_data(lt::torrent_handle::only_if_modified |
-                                   lt::torrent_handle::save_info_dict);
+            if (auto alert = lt::alert_cast<lt::torrent_finished_alert>(a)) {
+                alert->handle.save_resume_data(lt::torrent_handle::only_if_modified |
+                                               lt::torrent_handle::save_info_dict);
                 done = true;
             }
-            if (lt::alert_cast<lt::torrent_error_alert>(a)) {
+            if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
+                auto h = alert->handle;
                 std::cout << a->message() << std::endl;
                 done = true;
                 h.save_resume_data(lt::torrent_handle::only_if_modified |
@@ -100,10 +102,7 @@ int main(int argc, char const *argv[]) try {
 
             // when resume data is ready, save it
             if (auto rd = lt::alert_cast<lt::save_resume_data_alert>(a)) {
-                std::ofstream of(".resume_file", std::ios_base::binary);
-                of.unsetf(std::ios_base::skipws);
-                auto const b = write_resume_data_buf(rd->params);
-                of.write(b.data(), int(b.size()));
+                mt::save_torrent_data(rd);
                 if (done) goto done;
             }
 
@@ -116,13 +115,14 @@ int main(int argc, char const *argv[]) try {
 
                 // we only have a single torrent, so we know which one
                 // the status is for
-                lt::torrent_status const &s = st->status[0];
-                std::cout << '\r' << mt::state(s.state) << ' '
-                          << (s.download_payload_rate / 1000) << " kB/s "
-                          << (s.total_done / 1000) << " kB ("
-                          << (s.progress_ppm / 10000) << "%) downloaded ("
-                          << s.num_peers << " peers)\x1b[K";
-                std::cout.flush();
+                for (auto const &s: st->status) {
+                    std::cout << '\r' << mt::state(s.state) << ' '
+                              << (s.download_payload_rate / 1000) << " kB/s "
+                              << (s.total_done / 1000) << " kB ("
+                              << (s.progress_ppm / 10000) << "%) downloaded ("
+                              << s.num_peers << " peers)\x1b[K";
+                    std::cout.flush();
+                }
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -133,8 +133,10 @@ int main(int argc, char const *argv[]) try {
 
         // save resume data once every 30 seconds
         if (clk::now() - last_save_resume > std::chrono::seconds(30)) {
-            h.save_resume_data(lt::torrent_handle::only_if_modified |
-                               lt::torrent_handle::save_info_dict);
+            for (auto const &h: handles) {
+                h.save_resume_data(lt::torrent_handle::only_if_modified |
+                                   lt::torrent_handle::save_info_dict);
+            }
             last_save_resume = clk::now();
         }
     }
