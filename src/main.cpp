@@ -51,7 +51,7 @@ int main(int argc, char const *argv[]) try {
     auto buf = mt::load_file((mt::storage_dir() + "/resume_files/.resume_file").c_str());
 
     lt::add_torrent_params magnet = lt::parse_magnet_uri(argv[1]);
-    if (buf.size()) {
+    if (!buf.empty()) {
         lt::add_torrent_params atp = lt::read_resume_data(buf);
         if (atp.info_hashes == magnet.info_hashes) magnet = std::move(atp);
     }
