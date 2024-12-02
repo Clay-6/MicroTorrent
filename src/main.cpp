@@ -5,11 +5,9 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/magnet_uri.hpp>
-#include <libtorrent/read_resume_data.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/torrent_handle.hpp>
-#include <libtorrent/torrent_status.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <thread>
 #include "backend.hpp"
