@@ -84,4 +84,8 @@ namespace mt {
         }
 
     } // namespace mt
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 }

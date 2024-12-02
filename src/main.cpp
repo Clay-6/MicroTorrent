@@ -14,11 +14,7 @@
 
 namespace {
     using clk = std::chrono::steady_clock;
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-
+    
     // set when we're exiting
     std::atomic<bool> shut_down{false};
 
