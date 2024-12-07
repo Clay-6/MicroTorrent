@@ -31,7 +31,7 @@ int main(int argc, char const *argv[]) try {
     }
 
     // load session parameters
-    auto session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
+    std::vector<char> session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
     lt::session_params params = session_params.empty()
                                 ? lt::session_params()
                                 : lt::read_session_params(session_params);
@@ -44,9 +44,9 @@ int main(int argc, char const *argv[]) try {
     clk::time_point last_save_resume = clk::now();
 
     // load resume data from disk and pass it in as we add the added link
-    auto resumes = mt::resume_torrents();
+    std::vector<lt::add_torrent_params> resumes = mt::resume_torrents();
 
-    auto cmd_arg = argv[1];
+    const char *cmd_arg = argv[1];
     lt::add_torrent_params added;
     if (std::filesystem::exists(cmd_arg)) {
         added = lt::load_torrent_file(cmd_arg);
@@ -95,7 +95,7 @@ int main(int argc, char const *argv[]) try {
                                                lt::torrent_handle::save_info_dict);
             }
             if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
-                auto h = alert->handle;
+                lt::torrent_handle h = alert->handle;
                 std::cout << a->message() << std::endl;
                 done = true;
                 h.save_resume_data(lt::torrent_handle::only_if_modified |
@@ -148,8 +148,8 @@ int main(int argc, char const *argv[]) try {
     {
         std::ofstream of(mt::storage_dir() + "/.session", std::ios_base::binary);
         of.unsetf(std::ios_base::skipws);
-        auto const b = write_session_params_buf(ses.session_state(),
-                                                lt::save_state_flags_t::all());
+        const std::vector<char> b = write_session_params_buf(ses.session_state(),
+                                                             lt::save_state_flags_t::all());
         of.write(b.data(), int(b.size()));
     }
 
