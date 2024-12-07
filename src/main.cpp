@@ -2,6 +2,7 @@
 #include <csignal>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/magnet_uri.hpp>
@@ -9,12 +10,13 @@
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/write_resume_data.hpp>
+#include <libtorrent/load_torrent.hpp>
 #include <thread>
 #include "backend.hpp"
 
 namespace {
     using clk = std::chrono::steady_clock;
-    
+
     // set when we're exiting
     std::atomic<bool> shut_down{false};
 
@@ -24,7 +26,7 @@ namespace {
 
 int main(int argc, char const *argv[]) try {
     if (argc != 2) {
-        std::cerr << "usage: " << argv[0] << " <magnet-url>" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <added-url>" << std::endl;
         return 1;
     }
 
@@ -41,18 +43,25 @@ int main(int argc, char const *argv[]) try {
     lt::session ses(params);
     clk::time_point last_save_resume = clk::now();
 
-    // load resume data from disk and pass it in as we add the magnet link
+    // load resume data from disk and pass it in as we add the added link
     auto resumes = mt::resume_torrents();
 
-    lt::add_torrent_params magnet = lt::parse_magnet_uri(argv[1]);
+    auto cmd_arg = argv[1];
+    lt::add_torrent_params added;
+    if (std::filesystem::exists(cmd_arg)) {
+        added = lt::load_torrent_file(cmd_arg);
+    } else {
+        added = lt::parse_magnet_uri(argv[1]);
+    }
+
     if (!resumes.empty()) {
         for (auto atp: resumes)
-            if (atp.info_hashes == magnet.info_hashes) { magnet = std::move(atp); }
+            if (atp.info_hashes == added.info_hashes) { added = std::move(atp); }
     }
-    magnet.save_path = ".";  // save in current dir
+    added.save_path = ".";  // save in current dir
 
-    // add the passed magnet link and all the resumable torrents
-    ses.async_add_torrent(std::move(magnet));
+    // add the passed added link and all the resumable torrents
+    ses.async_add_torrent(std::move(added));
     for (auto atp: resumes) ses.async_add_torrent(std::move(atp));
 
     // We'll add the handles here once they've been added
