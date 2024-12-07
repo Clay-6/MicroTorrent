@@ -30,6 +30,10 @@ int main(int argc, char const *argv[]) try {
         return 1;
     }
 
+    if (!std::filesystem::exists(mt::storage_dir())) {
+        std::filesystem::create_directory(mt::storage_dir());
+    }
+
     // load session parameters
     std::vector<char> session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
     lt::session_params params = session_params.empty()
