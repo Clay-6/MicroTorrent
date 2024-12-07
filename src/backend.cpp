@@ -23,6 +23,8 @@ namespace mt {
     namespace fs = std::filesystem;
 
     std::vector<char> load_file(const char *filename) {
+        if (!fs::exists(filename)) return {};
+        
         std::ifstream ifs(filename, std::ios_base::binary);
         ifs.unsetf(std::ios_base::skipws); // Don't skip whitespace
         return {std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
