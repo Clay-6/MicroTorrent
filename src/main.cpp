@@ -122,7 +122,7 @@ int main(int argc, char const *argv[]) try {
                 // we only have a single torrent, so we know which one
                 // the status is for
                 for (auto const &s: st->status) {
-                    std::cout << '\r' << mt::state(s.state) << ' '
+                    std::cout << '\r' << s.name << ": " << mt::state(s.state) << ' '
                               << (s.download_payload_rate / 1000) << " kB/s "
                               << (s.total_done / 1000) << " kB ("
                               << (s.progress_ppm / 10000) << "%) downloaded ("
@@ -137,8 +137,8 @@ int main(int argc, char const *argv[]) try {
         // state output for the torrent
         ses.post_torrent_updates();
 
-        // save resume data once every 30 seconds
-        if (clk::now() - last_save_resume > std::chrono::seconds(30)) {
+        // save resume data once every 5 seconds
+        if (clk::now() - last_save_resume > std::chrono::seconds(5)) {
             for (auto const &h: handles) {
                 h.save_resume_data(lt::torrent_handle::only_if_modified |
                                    lt::torrent_handle::save_info_dict);

@@ -4,6 +4,8 @@
 #include <fstream>
 #include <libtorrent/read_resume_data.hpp>
 #include <libtorrent/write_resume_data.hpp>
+#include <vector>
+#include <iostream>
 
 namespace mt {
     std::string storage_dir() noexcept {
@@ -24,7 +26,7 @@ namespace mt {
 
     std::vector<char> load_file(const char *filename) {
         if (!fs::exists(filename)) return {};
-        
+
         std::ifstream ifs(filename, std::ios_base::binary);
         ifs.unsetf(std::ios_base::skipws); // Don't skip whitespace
         return {std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
@@ -56,14 +58,19 @@ namespace mt {
     }
 
     void save_torrent_data(const lt::save_resume_data_alert *alert) {
-        std::string path = storage_dir() + "/resume-files" + alert->handle.info_hash().to_string() + ".resume_file";
+        /*
+         * Yes, I know the name method is deprecated but the filename has to be both unique and
+         * easy to generate. The torrent name fits the second perfectly and _mostly_ fits the first.
+         * infohash would be better but that can't be a filename unfortunately
+         * */
+        std::string path = storage_dir() + "/resume-files/" + alert->handle.name() + ".resume_file";
         std::ofstream of(path, std::ios_base::binary);
         of.unsetf(std::ios_base::skipws);
-        auto const b = write_resume_data_buf(alert->params);
+        const std::vector<char> b = lt::write_resume_data_buf(alert->params);
         of.write(b.data(), int(b.size()));
     }
 
-    char const *state(lt::torrent_status::state_t s) {
+    const char *state(lt::torrent_status::state_t s) {
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
