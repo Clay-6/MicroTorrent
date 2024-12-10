@@ -5,12 +5,10 @@
 #include <filesystem>
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
-#include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/write_resume_data.hpp>
-#include <libtorrent/load_torrent.hpp>
 #include <thread>
 #include "backend.hpp"
 
@@ -98,11 +96,14 @@ int main(int argc, char const *argv[]) try {
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
                 handles.push_back(at->handle);
             }
-            // if we receive the finished alert or an error, we're done
+
+            // if a torrent finishes, save its resume data
             if (auto alert = lt::alert_cast<lt::torrent_finished_alert>(a)) {
                 alert->handle.save_resume_data(lt::torrent_handle::only_if_modified |
                                                lt::torrent_handle::save_info_dict);
             }
+
+            // if we receive an error, give up
             if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
                 lt::torrent_handle h = alert->handle;
                 std::cout << a->message() << std::endl;
