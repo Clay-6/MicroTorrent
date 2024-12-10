@@ -30,6 +30,7 @@ int main(int argc, char const *argv[]) try {
         return 1;
     }
 
+    // create the storage directory if it doesn't exist already
     if (!std::filesystem::exists(mt::storage_dir())) {
         std::filesystem::create_directory(mt::storage_dir());
     }
@@ -39,6 +40,7 @@ int main(int argc, char const *argv[]) try {
     lt::session_params params = session_params.empty()
                                 ? lt::session_params()
                                 : lt::read_session_params(session_params);
+    // receive error, storage, & status alerts
     params.settings.set_int(lt::settings_pack::alert_mask,
                             lt::alert_category::error |
                             lt::alert_category::storage |
@@ -50,23 +52,25 @@ int main(int argc, char const *argv[]) try {
     // load resume data from disk and pass it in as we add the added link
     std::vector<lt::add_torrent_params> resumes = mt::resume_torrents();
 
-    const char *cmd_arg = argv[1];
-    lt::add_torrent_params added;
-    if (std::filesystem::exists(cmd_arg)) {
-        added = lt::load_torrent_file(cmd_arg);
-    } else {
-        added = lt::parse_magnet_uri(argv[1]);
-    }
+    lt::add_torrent_params added = mt::load_torrent(argv[1]);
 
     if (!resumes.empty()) {
-        for (auto atp: resumes)
-            if (atp.info_hashes == added.info_hashes) { added = std::move(atp); }
+        for (auto atp: resumes) {
+            if (atp.info_hashes == added.info_hashes) {
+                added = std::move(atp);
+            }
+        }
     }
     added.save_path = ".";  // save in current dir
 
     // add the passed added link and all the resumable torrents
     ses.async_add_torrent(std::move(added));
-    for (auto atp: resumes) ses.async_add_torrent(std::move(atp));
+    for (auto atp: resumes) {
+        if (!std::filesystem::exists(atp.save_path)) {
+            atp.total_downloaded = 0;
+        }
+        ses.async_add_torrent(std::move(atp));
+    }
 
     // We'll add the handles here once they've been added
     std::vector<lt::torrent_handle> handles;

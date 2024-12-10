@@ -6,6 +6,8 @@
 #include <libtorrent/write_resume_data.hpp>
 #include <vector>
 #include <iostream>
+#include <libtorrent/magnet_uri.hpp>
+#include <libtorrent/load_torrent.hpp>
 
 namespace mt {
     std::string storage_dir() noexcept {
@@ -30,6 +32,16 @@ namespace mt {
         std::ifstream ifs(filename, std::ios_base::binary);
         ifs.unsetf(std::ios_base::skipws); // Don't skip whitespace
         return {std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
+    }
+
+    lt::add_torrent_params load_torrent(const std::string &torrent) {
+        // all magnet links must start with `magnet:?`, so we can use that
+        // to differentiate between a magnet & file torrent
+        if (torrent.starts_with("magnet:?")) {
+            return lt::parse_magnet_uri(torrent);
+        } else {
+            return lt::load_torrent_file(torrent);
+        }
     }
 
     std::vector<lt::add_torrent_params> resume_torrents() noexcept {
@@ -92,9 +104,9 @@ namespace mt {
                 return "<>";
         }
 
-    } // namespace mt
+    }
+
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
-
-}
+} // namespace mt
