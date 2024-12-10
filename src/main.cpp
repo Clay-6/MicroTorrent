@@ -67,6 +67,7 @@ int main(int argc, char const *argv[]) try {
     ses.async_add_torrent(std::move(added));
     for (auto atp: resumes) {
         if (!std::filesystem::exists(atp.save_path)) {
+            // if the save path no longer exists, we need to start from scratch
             atp.total_downloaded = 0;
         }
         ses.async_add_torrent(std::move(atp));
