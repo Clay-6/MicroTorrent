@@ -10,7 +10,10 @@
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <thread>
+#include <slint.h>
+
 #include "backend.hpp"
+#include "window.h"
 
 namespace {
     using clk = std::chrono::steady_clock;
@@ -22,60 +25,9 @@ namespace {
 
 }  // anonymous namespace
 
-int main(int argc, char const *argv[]) try {
-    if (argc != 2) {
-        std::cerr << "usage: " << argv[0] << " <added-url>" << std::endl;
-        return 1;
-    }
-
-    // create the storage directory if it doesn't exist already
-    if (!std::filesystem::exists(mt::storage_dir())) {
-        std::filesystem::create_directory(mt::storage_dir());
-    }
-
-    // load session parameters
-    std::vector<char> session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
-    lt::session_params params = session_params.empty()
-                                ? lt::session_params()
-                                : lt::read_session_params(session_params);
-    // receive error, storage, & status alerts
-    params.settings.set_int(lt::settings_pack::alert_mask,
-                            lt::alert_category::error |
-                            lt::alert_category::storage |
-                            lt::alert_category::status);
-
-    lt::session ses(params);
-    clk::time_point last_save_resume = clk::now();
-
-    // load resume data from disk and pass it in as we add the added link
-    std::vector<lt::add_torrent_params> resumes = mt::resume_torrents();
-
-    lt::add_torrent_params added = mt::load_torrent(argv[1]);
-
-    if (!resumes.empty()) {
-        for (auto atp: resumes) {
-            if (atp.info_hashes == added.info_hashes) {
-                added = std::move(atp);
-            }
-        }
-    }
-    added.save_path = ".";  // save in current dir
-
-    // add the passed added link and all the resumable torrents
-    ses.async_add_torrent(std::move(added));
-    for (auto atp: resumes) {
-        if (!std::filesystem::exists(atp.save_path)) {
-            // if the save path no longer exists, we need to start from scratch
-            atp.total_downloaded = 0;
-        }
-        ses.async_add_torrent(std::move(atp));
-    }
-
+void event_loop(lt::session &ses, clk::time_point last_save_resume) {
     // We'll add the handles here once they've been added
     std::vector<lt::torrent_handle> handles;
-
-    std::signal(SIGINT, &sighandler);
-
     // set when we're exiting
     bool done = false;
     for (;;) {
@@ -164,6 +116,69 @@ int main(int argc, char const *argv[]) try {
     }
 
     std::cout << "\ndone, shutting down" << std::endl;
+}
+
+int main(int argc, char const *argv[]) try {
+    if (argc != 2) {
+        std::cerr << "usage: " << argv[0] << " <added-url>" << std::endl;
+        return 1;
+    }
+
+    auto ui = MainWindow::create();
+
+    // create the storage directory if it doesn't exist already
+    if (!std::filesystem::exists(mt::storage_dir())) {
+        std::filesystem::create_directory(mt::storage_dir());
+    }
+
+    // load session parameters
+    std::vector<char> session_params = mt::load_file((mt::storage_dir() + "/.session").c_str());
+    lt::session_params params = session_params.empty()
+                                ? lt::session_params()
+                                : lt::read_session_params(session_params);
+    // receive error, storage, & status alerts
+    params.settings.set_int(lt::settings_pack::alert_mask,
+                            lt::alert_category::error |
+                            lt::alert_category::storage |
+                            lt::alert_category::status);
+
+    lt::session ses(params);
+    clk::time_point last_save_resume = clk::now();
+
+    // load resume data from disk and pass it in as we add the added link
+    std::vector<lt::add_torrent_params> resumes = mt::resume_torrents();
+
+    lt::add_torrent_params added = mt::load_torrent(argv[1]);
+
+    if (!resumes.empty()) {
+        for (auto atp: resumes) {
+            if (atp.info_hashes == added.info_hashes) {
+                added = std::move(atp);
+            }
+        }
+    }
+    added.save_path = ".";  // save in current dir
+
+    // add the passed added link and all the resumable torrents
+    ses.async_add_torrent(std::move(added));
+    for (auto atp: resumes) {
+        if (!std::filesystem::exists(atp.save_path)) {
+            // if the save path no longer exists, we need to start from scratch
+            atp.total_downloaded = 0;
+        }
+        ses.async_add_torrent(std::move(atp));
+    }
+
+
+    std::signal(SIGINT, &sighandler);
+
+    std::thread event_thread{[&]() { event_loop(ses, last_save_resume); }};
+
+    ui->run();
+
+    // upon returning, the window has been closed
+    shut_down = true;
+    event_thread.join();
 } catch (std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
 }
