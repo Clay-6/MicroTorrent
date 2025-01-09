@@ -62,8 +62,13 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 atp.save_path = ".";
                 ses.async_add_torrent(atp);
             } catch (lt::system_error e) {
-                std::cout << "Error: " << e.what() << "\n";
-            };
+                slint::SharedString msg = e.what();
+                slint::invoke_from_event_loop([msg, &ui_weak]() {
+                    auto ui = *ui_weak.lock();
+                    ui->set_error_message(msg);
+                    ui->invoke_show_error();
+                });
+            }
         }
 
         while (!del_reqs.empty()) {
