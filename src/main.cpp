@@ -82,9 +82,22 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             }
         }
 
+        // handle the alerts
         for (lt::alert const *a: alerts) {
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
                 handles.push_back(at->handle);
+
+                TorrentInfo new_info;
+                new_info.name = at->handle.name();
+                new_info.ses_id = at->handle.id();
+                new_info.downloaded_bytes = at->params.total_downloaded;
+                new_info.total_bytes = INT_MAX; // FIXME: get the real total size
+
+                slint::invoke_from_event_loop([new_info, &infos, &ui_weak]() {
+                    infos->push_back(new_info);
+                    auto ui = ui_weak.lock();
+                    ui.value()->set_torrents(infos);
+                });
             }
 
             // if a torrent finishes, save its resume data
