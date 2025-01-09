@@ -38,6 +38,7 @@ namespace mt {
 
     struct add_request {
         std::string uri;
+        std::string save_path;
     };
 
     struct remove_request {

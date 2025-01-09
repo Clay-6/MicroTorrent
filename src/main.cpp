@@ -59,7 +59,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             }
             try {
                 lt::add_torrent_params atp = mt::load_torrent(req.uri);
-                atp.save_path = ".";
+                atp.save_path = req.save_path;
                 ses.async_add_torrent(atp);
             } catch (lt::system_error e) {
                 slint::SharedString msg = e.what();
@@ -128,9 +128,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             if (auto st = lt::alert_cast<lt::state_update_alert>(a)) {
                 if (st->status.empty()) continue;
 
-                // we only have a single torrent, so we know which one
-                // the status is for
                 for (auto const &s: st->status) {
+                    // print to console for debugging
                     std::cout << '\r' << s.name << ": " << mt::state(s.state) << ' '
                               << (s.download_payload_rate / 1000) << " kB/s "
                               << (s.total_done / 1000) << " kB ("
@@ -211,8 +210,8 @@ int main(int argc, char const *argv[]) try {
     msd::channel<mt::remove_request> remove_channel;
 
     // set up request callbacks
-    ui->on_add_torrent([&](auto torrent) {
-        mt::add_request req{std::string(torrent)};
+    ui->on_add_torrent([&](auto torrent, auto save_path) {
+        mt::add_request req{std::string(torrent), std::string(save_path)};
         add_channel << req;
     });
 

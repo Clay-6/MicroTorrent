@@ -12,7 +12,7 @@ component AddPopup {
         pw.show();
     }
 
-    callback add_pressed(string);
+    callback add_pressed(string, string);
     min-width: 350px;
 
     pw := PopupWindow {
@@ -34,15 +34,12 @@ component AddPopup {
         }
 
         VerticalBox {
-            Text {
-                text: "Enter a file path or magnet link below:";
-                horizontal-alignment: center;
+            uri := LineEdit {
+                placeholder-text: "Torrent file path or magnet link";
             }
 
-            uri := LineEdit {
-                accepted(text) => {
-                    add_pressed(text);
-                }
+            save_path := LineEdit {
+                placeholder-text: "Save path";
             }
 
             HorizontalBox {
@@ -52,7 +49,7 @@ component AddPopup {
 
                     text: "Add";
                     clicked => {
-                        uri.accepted(uri.text);
+                        add_pressed(uri.text, save_path.text);
                     }
                 }
 
@@ -76,7 +73,9 @@ export component MainWindow inherits Window {
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
     in property <string> error_message;
-    callback add_torrent(string);
+    // args are uri, save path
+    callback add_torrent(string, string);
+    callback remove_torrent(int);
 
     callback show_error;
     show_error => {
@@ -88,8 +87,8 @@ export component MainWindow inherits Window {
         x: 0;
         y: self.height / 2;
 
-        add_pressed(text) => {
-            add_torrent(text);
+        add_pressed(uri, path) => {
+            add_torrent(uri, path);
         }
     }
 
@@ -143,14 +142,14 @@ export component MainWindow inherits Window {
                 GroupBox {
                     title: "Torrents";
                     torrent-list := ListView {
-                        property <[TorrentInfo]> info: [];
+                        property <[TorrentInfo]> info;
                         max-height: 70% * root.height;
                         for torrent in info: Rectangle {
                             border-width: 1px;
                             border-color: grey;
                             height: 20px;
                             width: parent.width;
-                
+
                 // Torrent name
                 Text {
                                 x: 3px;
