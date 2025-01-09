@@ -75,11 +75,16 @@ export component MainWindow inherits Window {
     min-width: 400px;
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
+    callback add_torrent(string);
 
     add_popup := AddPopup {
         width: parent.width;
         x: 0;
         y: self.height / 2;
+
+        add_pressed(text) => {
+            add_torrent(text);
+        }
     }
 
     TabWidget {

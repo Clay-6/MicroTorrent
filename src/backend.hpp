@@ -37,7 +37,7 @@ namespace mt {
     lt::add_torrent_params load_torrent(const std::string &torrent);
 
     struct add_request {
-        std::string_view uri;
+        std::string uri;
     };
 
     struct remove_request {

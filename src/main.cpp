@@ -1,4 +1,3 @@
-#include <chrono>
 #include <csignal>
 #include <fstream>
 #include <iostream>
@@ -11,6 +10,8 @@
 #include <libtorrent/write_resume_data.hpp>
 #include <thread>
 #include <slint.h>
+#include <msd/channel.hpp>
+
 
 #include "backend.hpp"
 #include "window.h"
@@ -25,9 +26,11 @@ namespace {
 
 }  // anonymous namespace
 
-void event_loop(lt::session &ses, clk::time_point last_save_resume) {
+void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
+                msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs) {
     // We'll add the handles here once they've been added
     std::vector<lt::torrent_handle> handles;
+    auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>(); // info for all the torrents to be displayed in the UI
     // set when we're exiting
     bool done = false;
     for (;;) {
@@ -41,6 +44,36 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume) {
                         lt::torrent_handle::only_if_modified |
                         lt::torrent_handle::save_info_dict);
                 done = true;
+            }
+        }
+
+        while (!add_reqs.empty()) {
+            mt::add_request req;
+            add_reqs >> req;
+            // if it has quotes around it, we WILL die so must remove them
+            if (req.uri.starts_with('"') || req.uri.starts_with('\'')) {
+                req.uri.erase(0, 1);
+            }
+            if (req.uri.ends_with('"') || req.uri.ends_with('\'')) {
+                req.uri.erase(req.uri.size() - 1, 1);
+            }
+            try {
+                lt::add_torrent_params atp = mt::load_torrent(req.uri);
+                atp.save_path = ".";
+                ses.async_add_torrent(atp);
+            } catch (lt::system_error e) {
+                std::cout << "Error: " << e.what() << "\n";
+            };
+        }
+
+        while (!del_reqs.empty()) {
+            mt::remove_request req;
+            del_reqs >> req;
+            for (auto const &h: handles) {
+                if (h.id() == req.id) {
+                    ses.remove_torrent(h);
+                    break;
+                }
             }
         }
 
@@ -119,11 +152,6 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume) {
 }
 
 int main(int argc, char const *argv[]) try {
-    if (argc != 2) {
-        std::cerr << "usage: " << argv[0] << " <added-url>" << std::endl;
-        return 1;
-    }
-
     auto ui = MainWindow::create();
 
     // create the storage directory if it doesn't exist already
@@ -148,19 +176,7 @@ int main(int argc, char const *argv[]) try {
     // load resume data from disk and pass it in as we add the added link
     std::vector<lt::add_torrent_params> resumes = mt::resume_torrents();
 
-    lt::add_torrent_params added = mt::load_torrent(argv[1]);
-
-    if (!resumes.empty()) {
-        for (auto atp: resumes) {
-            if (atp.info_hashes == added.info_hashes) {
-                added = std::move(atp);
-            }
-        }
-    }
-    added.save_path = ".";  // save in current dir
-
-    // add the passed added link and all the resumable torrents
-    ses.async_add_torrent(std::move(added));
+    // add all the resumable torrents
     for (auto atp: resumes) {
         if (!std::filesystem::exists(atp.save_path)) {
             // if the save path no longer exists, we need to start from scratch
@@ -172,11 +188,26 @@ int main(int argc, char const *argv[]) try {
 
     std::signal(SIGINT, &sighandler);
 
-    std::thread event_thread{[&]() { event_loop(ses, last_save_resume); }};
+    // set up channels
+    msd::channel<mt::add_request> add_channel;
+    msd::channel<mt::remove_request> remove_channel;
+
+    // set up request callbacks
+    ui->on_add_torrent([&](auto torrent) {
+        mt::add_request req{std::string(torrent)};
+        add_channel << req;
+    });
+
+    slint::ComponentWeakHandle<MainWindow> ui_weak(ui);
+
+    std::thread event_thread{[ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel]() {
+        event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel);
+    }};
+
 
     ui->run();
 
-    // upon returning, the window has been closed
+    // upon returning, the window has been closed so we need to stop the event loop
     shut_down = true;
     event_thread.join();
 } catch (std::exception &e) {
