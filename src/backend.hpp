@@ -35,4 +35,12 @@ namespace mt {
     /// @returns The `add_torrent_params` object for the requested torrent.
     /// Will throw an exception if parsing fails
     lt::add_torrent_params load_torrent(const std::string &torrent);
+
+    struct add_request {
+        std::string_view uri;
+    };
+
+    struct remove_request {
+        int id;
+    };
 } // namespace mt
