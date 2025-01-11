@@ -172,7 +172,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                             // in case the name has changed, update it here
                             info.name = s.name;
                             info.downloaded_bytes = s.total_done;
-                            info.total_bytes = s.total_wanted;
+                            info.total_bytes = s.total;
 
                             slint::invoke_from_event_loop([i, info, infos, &ui_weak]() {
                                 infos->set_row_data(i, info);
