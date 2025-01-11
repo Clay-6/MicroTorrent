@@ -139,21 +139,33 @@ export component MainWindow inherits Window {
                             height: 20px;
                             width: parent.width;
 
-                            // Torrent name
-                            Text {
+                            HorizontalLayout {
                                 x: 3px;
-                                text: torrent.name;
-                                width: parent.width / 2 - 5px;
-                                overflow: elide;
-                            }
+                                // Torrent name
+                                Text {
 
-                            // Torrent progress
-                            ProgressIndicator {
-                                accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
-                                x: parent.width / 2;
-                                progress: torrent.downloaded_bytes / torrent.total_bytes;
-                                height: parent.height - 2px;
-                                width: parent.width / 2;
+                                    text: torrent.name;
+                                    width: parent.width / 3 - 5px;
+                                    overflow: elide;
+                                }
+
+                                // Torrent progress
+                                ProgressIndicator {
+                                    accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
+                                    progress: torrent.downloaded_bytes / torrent.total_bytes;
+                                    height: parent.height - 2px;
+                                    width: parent.width / 3;
+                                }
+
+                                // Remove Button
+                                Button {
+                                    text: "Remove";
+                                    width: parent.width / 3;
+                                    height: parent.height - 2px;
+                                    clicked => {
+                                        remove_torrent(torrent.ses_id);
+                                    }
+                                }
                             }
                         }
                     }
