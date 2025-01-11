@@ -70,6 +70,7 @@ component AddPopup {
 export component MainWindow inherits Window {
     min-height: 350px;
     min-width: 400px;
+    title: "MicroTorrent";
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
     in property <string> error_message;
