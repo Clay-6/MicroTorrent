@@ -201,7 +201,7 @@ export component MainWindow inherits Window {
                 }
 
                 GroupBox {
-                    title: "Connected peers";
+                    title: "Connected peers (\{peers.length})";
                     height: 30% * root.height;
                     peers-list := ListView {
                         property <[string]> peers;
