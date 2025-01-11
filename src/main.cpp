@@ -48,7 +48,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         }
 
         while (!add_reqs.empty()) {
-            mt::add_request req;
+            mt::add_request req{};
             add_reqs >> req;
             // if it has quotes around it, we WILL die so must remove them
             if (req.uri.starts_with('"') || req.uri.starts_with('\'')) {
@@ -61,7 +61,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 lt::add_torrent_params atp = mt::load_torrent(req.uri);
                 atp.save_path = req.save_path;
                 ses.async_add_torrent(atp);
-            } catch (lt::system_error e) {
+            } catch (lt::system_error &e) {
                 slint::SharedString msg = e.what();
                 slint::invoke_from_event_loop([msg, &ui_weak]() {
                     auto ui = *ui_weak.lock();
@@ -72,7 +72,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         }
 
         while (!del_reqs.empty()) {
-            mt::remove_request req;
+            mt::remove_request req{};
             del_reqs >> req;
             for (auto const &h: handles) {
                 if (h.id() == req.id) {
@@ -210,7 +210,7 @@ int main(int argc, char const *argv[]) try {
     msd::channel<mt::remove_request> remove_channel;
 
     // set up request callbacks
-    ui->on_add_torrent([&](auto torrent, auto save_path) {
+    ui->on_add_torrent([&](const auto &torrent, const auto &save_path) {
         mt::add_request req{std::string(torrent), std::string(save_path)};
         add_channel << req;
     });
