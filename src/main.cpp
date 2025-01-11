@@ -28,8 +28,8 @@ namespace {
 
 void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
                 msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs) {
-    // We'll add the handles here once they've been added
-    auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>(); // info for all the torrents to be displayed in the UI
+    // info for all the torrents to be displayed in the UI
+    auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>();
     // set when we're exiting
     bool done = false;
     for (;;) {
