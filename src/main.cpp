@@ -168,6 +168,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                     std::cout.flush();
                     std::vector<lt::peer_info> these_peers;
                     s.handle.get_peer_info(these_peers);
+                    // we're only allowed to edit the overall peer list from slint's event loop, so do that
                     slint::invoke_from_event_loop([these_peers, peers]() {
                         for (const auto &p: these_peers) {
                             auto ip = slint::SharedString(p.ip.address().to_string());
@@ -192,6 +193,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                         }
                     }
                 }
+                // update the UI's peer list
                 slint::invoke_from_event_loop([peers, &ui_weak]() {
                     auto ui = *ui_weak.lock();
                     ui->set_peers(peers);
