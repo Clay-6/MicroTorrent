@@ -88,7 +88,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             // update UI with added torrent
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
                 TorrentInfo new_info;
-                new_info.name = at->params.name;
+                new_info.name = at->torrent_name();
                 new_info.ses_id = at->handle.id();
                 // We can't get the downloaded bytes or progress at this stage, so initialise them to 0
                 new_info.downloaded_bytes = 0;
