@@ -29,7 +29,6 @@ namespace {
 void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
                 msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs) {
     // We'll add the handles here once they've been added
-    std::vector<lt::torrent_handle> handles;
     auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>(); // info for all the torrents to be displayed in the UI
     // set when we're exiting
     bool done = false;
@@ -39,7 +38,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
         if (shut_down) {
             shut_down = false;
-            for (auto const &h: handles) {
+            for (auto const &h: ses.get_torrents()) {
                 h.save_resume_data(
                         lt::torrent_handle::only_if_modified |
                         lt::torrent_handle::save_info_dict);
@@ -76,7 +75,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         while (!del_reqs.empty()) {
             mt::remove_request req{};
             del_reqs >> req;
-            for (auto const &h: handles) {
+            for (auto const &h: ses.get_torrents()) {
                 if (h.id() == req.id) {
                     ses.remove_torrent(h);
                     break;
@@ -86,9 +85,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
         // handle the alerts
         for (lt::alert const *a: alerts) {
+            // update UI with added torrent
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a)) {
-                handles.push_back(at->handle);
-
                 TorrentInfo new_info;
                 new_info.name = at->params.name;
                 new_info.ses_id = at->handle.id();
@@ -103,10 +101,35 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 });
             }
 
+            // update ui to remove torrent
+            if (auto alert = lt::alert_cast<lt::torrent_removed_alert>(a)) {
+                std::string name = alert->torrent_name();
+                // remove the torrent from our lists
+                for (int i = 0; i < infos->row_count(); i++) {
+                    TorrentInfo info = *infos->row_data(i);
+                    if (std::string(info.name) == name) {
+                        // update the ui
+                        slint::invoke_from_event_loop([i, infos, &ui_weak]() {
+                            infos->erase(i);
+                            auto ui = *ui_weak.lock();
+                            ui->set_torrents(infos);
+                        });
+                    }
+                }
+
+                // delete its remove file
+                std::string resume_file_path =
+                        mt::storage_dir() + "/resume-files/" + name + ".resume_file";
+                if (std::filesystem::exists(resume_file_path)) {
+                    std::filesystem::remove(resume_file_path);
+                }
+            }
+
             // if a torrent finishes, save its resume data
             if (auto alert = lt::alert_cast<lt::torrent_finished_alert>(a)) {
-                alert->handle.save_resume_data(lt::torrent_handle::only_if_modified |
-                                               lt::torrent_handle::save_info_dict);
+                if (alert->handle.in_session())
+                    alert->handle.save_resume_data(lt::torrent_handle::only_if_modified |
+                                                   lt::torrent_handle::save_info_dict);
             }
 
             // if we receive an error, give up
@@ -120,7 +143,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
             // when resume data is ready, save it
             if (auto rd = lt::alert_cast<lt::save_resume_data_alert>(a)) {
-                mt::save_torrent_data(rd);
+                if (rd->handle.in_session())
+                    mt::save_torrent_data(rd);
                 if (done) goto done;
             }
 
@@ -167,9 +191,11 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
         // save resume data once every 5 seconds
         if (clk::now() - last_save_resume > std::chrono::seconds(5)) {
-            for (auto const &h: handles) {
-                h.save_resume_data(lt::torrent_handle::only_if_modified |
-                                   lt::torrent_handle::save_info_dict);
+            for (auto const &h: ses.get_torrents()) {
+                if (h.is_valid() && h.in_session()) {
+                    h.save_resume_data(lt::torrent_handle::only_if_modified |
+                                       lt::torrent_handle::save_info_dict);
+                }
             }
             last_save_resume = clk::now();
         }
@@ -233,6 +259,10 @@ int main(int argc, char const *argv[]) try {
     ui->on_add_torrent([&](const auto &torrent, const auto &save_path) {
         mt::add_request req{std::string(torrent), std::string(save_path)};
         add_channel << req;
+    });
+    ui->on_remove_torrent([&](const auto &id) {
+        mt::remove_request req{id};
+        remove_channel << req;
     });
 
     slint::ComponentWeakHandle<MainWindow> ui_weak(ui);
