@@ -104,6 +104,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             // update ui to remove torrent
             if (auto alert = lt::alert_cast<lt::torrent_removed_alert>(a)) {
                 std::string name = alert->torrent_name();
+                std::cout << name << '\n';
                 // remove the torrent from our lists
                 for (int i = 0; i < infos->row_count(); i++) {
                     TorrentInfo info = *infos->row_data(i);
@@ -168,6 +169,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                     for (int i = 0; i < infos->row_count(); i++) {
                         auto info = *infos->row_data(i);
                         if (info.ses_id == id) {
+                            // in case the name has changed, update it here
+                            info.name = s.name;
                             info.downloaded_bytes = s.total_done;
                             info.total_bytes = s.total_wanted;
 
