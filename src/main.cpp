@@ -156,6 +156,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
             if (auto st = lt::alert_cast<lt::state_update_alert>(a)) {
                 if (st->status.empty()) continue;
+                auto peers = std::make_shared<slint::VectorModel<slint::SharedString>>();
 
                 for (auto const &s: st->status) {
                     // print to console for debugging
@@ -165,6 +166,14 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                               << (s.progress_ppm / 10000) << "%) downloaded ("
                               << s.num_peers << " peers)\x1b[K";
                     std::cout.flush();
+                    std::vector<lt::peer_info> these_peers;
+                    s.handle.get_peer_info(these_peers);
+                    slint::invoke_from_event_loop([these_peers, peers]() {
+                        for (const auto &p: these_peers) {
+                            auto ip = slint::SharedString(p.ip.address().to_string());
+                            peers->push_back(ip);
+                        }
+                    });
 
                     auto id = s.handle.id();
                     for (int i = 0; i < infos->row_count(); i++) {
@@ -182,8 +191,11 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                             break;
                         }
                     }
-
                 }
+                slint::invoke_from_event_loop([peers, &ui_weak]() {
+                    auto ui = *ui_weak.lock();
+                    ui->set_peers(peers);
+                });
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(200));

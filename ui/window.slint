@@ -202,10 +202,10 @@ export component MainWindow inherits Window {
 
                 GroupBox {
                     title: "Connected peers";
-                    preferred-height: 30% * root.height;
+                    height: 30% * root.height;
                     peers-list := ListView {
                         property <[string]> peers;
-                        for peer in ["127.0.0.1", "127.0.0.2", "127.0.0.3"]: Rectangle {
+                        for peer in peers: Rectangle {
                             border-width: 1px;
                             border-color: grey;
                             height: 20px;
