@@ -88,7 +88,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 handles.push_back(at->handle);
 
                 TorrentInfo new_info;
-                new_info.name = at->handle.name();
+                new_info.name = at->params.name;
                 new_info.ses_id = at->handle.id();
                 new_info.downloaded_bytes = at->params.total_downloaded;
                 new_info.total_bytes = INT_MAX; // FIXME: get the real total size
