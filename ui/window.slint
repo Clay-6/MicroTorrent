@@ -150,9 +150,9 @@ export component MainWindow inherits Window {
 
                 GroupBox {
                     title: "Torrents";
+                    preferred-height: 70% * root.height;
                     torrent-list := ListView {
                         property <[TorrentInfo]> info;
-                        max-height: 70% * root.height;
                         for torrent in info: Rectangle {
                             border-width: 1px;
                             border-color: grey;
@@ -193,10 +193,6 @@ export component MainWindow inherits Window {
                                         text: "Remove";
                                         horizontal-alignment: center;
                                         vertical-alignment: center;
-
-//                                    clicked => {
-//                                        remove_torrent(torrent.ses_id);
-//                                    }
                                     }
                                 }
                             }
@@ -206,6 +202,7 @@ export component MainWindow inherits Window {
 
                 GroupBox {
                     title: "Connected peers";
+                    preferred-height: 30% * root.height;
                     peers-list := ListView {
                         property <[string]> peers;
                         for peer in ["127.0.0.1", "127.0.0.2", "127.0.0.3"]: Rectangle {
