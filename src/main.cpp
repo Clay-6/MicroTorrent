@@ -64,10 +64,10 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 atp.save_path = req.save_path.empty() ? "." : req.save_path;
                 ses.async_add_torrent(atp);
             } catch (lt::system_error &e) {
-                slint::SharedString msg = e.what();
-                slint::invoke_from_event_loop([msg, &ui_weak]() {
+                slint::invoke_from_event_loop([req, &ui_weak]() {
+                    std::string msg = "Torrent '" + req.uri + "' is invalid";
                     auto ui = *ui_weak.lock();
-                    ui->set_error_message(msg);
+                    ui->set_error_message(slint::SharedString(msg));
                     ui->invoke_show_error();
                 });
             }
