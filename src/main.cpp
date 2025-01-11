@@ -57,9 +57,11 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             if (req.uri.ends_with('"') || req.uri.ends_with('\'')) {
                 req.uri.erase(req.uri.size() - 1, 1);
             }
+            // if this fails, we don't want to just crash
             try {
                 lt::add_torrent_params atp = mt::load_torrent(req.uri);
-                atp.save_path = req.save_path;
+                // save to the current directory if the save path is empty
+                atp.save_path = req.save_path.empty() ? "." : req.save_path;
                 ses.async_add_torrent(atp);
             } catch (lt::system_error &e) {
                 slint::SharedString msg = e.what();
