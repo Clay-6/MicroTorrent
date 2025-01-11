@@ -92,8 +92,9 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 TorrentInfo new_info;
                 new_info.name = at->params.name;
                 new_info.ses_id = at->handle.id();
-                new_info.downloaded_bytes = at->params.total_downloaded;
-                new_info.total_bytes = INT_MAX; // FIXME: get the real total size
+                // We can't get the downloaded bytes or progress at this stage, so initialise them to 0
+                new_info.downloaded_bytes = 0;
+                new_info.total_bytes = 0;
 
                 slint::invoke_from_event_loop([new_info, &infos, &ui_weak]() {
                     infos->push_back(new_info);
@@ -138,6 +139,23 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                               << (s.progress_ppm / 10000) << "%) downloaded ("
                               << s.num_peers << " peers)\x1b[K";
                     std::cout.flush();
+
+                    auto id = s.handle.id();
+                    for (int i = 0; i < infos->row_count(); i++) {
+                        auto info = *infos->row_data(i);
+                        if (info.ses_id == id) {
+                            info.downloaded_bytes = s.total_done;
+                            info.total_bytes = s.total_wanted;
+
+                            slint::invoke_from_event_loop([i, info, infos, &ui_weak]() {
+                                infos->set_row_data(i, info);
+                                auto ui = *ui_weak.lock();
+                                ui->set_torrents(infos);
+                            });
+                            break;
+                        }
+                    }
+
                 }
             }
         }
