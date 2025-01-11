@@ -90,9 +90,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 TorrentInfo new_info;
                 new_info.name = at->torrent_name();
                 new_info.ses_id = at->handle.id();
-                // We can't get the downloaded bytes or progress at this stage, so initialise them to 0
-                new_info.downloaded_bytes = 0;
-                new_info.total_bytes = 0;
+                // we can't get the progress at this stage, so initialise it to 0
+                new_info.progress = 0;
 
                 slint::invoke_from_event_loop([new_info, &infos, &ui_weak]() {
                     infos->push_back(new_info);
@@ -171,8 +170,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                         if (info.ses_id == id) {
                             // in case the name has changed, update it here
                             info.name = s.name;
-                            info.downloaded_bytes = s.total_done;
-                            info.total_bytes = s.total;
+                            info.progress = s.progress;
 
                             slint::invoke_from_event_loop([i, info, infos, &ui_weak]() {
                                 infos->set_row_data(i, info);

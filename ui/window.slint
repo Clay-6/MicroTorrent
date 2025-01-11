@@ -3,8 +3,7 @@ import { HorizontalBox, Button, ListView, VerticalBox,Palette, ProgressIndicator
 export struct TorrentInfo {
     ses_id: int,
     name: string,
-    total_bytes: int,
-    downloaded_bytes: int,
+    progress: float,
 }
 
 component AddPopup {
@@ -151,8 +150,8 @@ export component MainWindow inherits Window {
 
                                 // Torrent progress
                                 ProgressIndicator {
-                                    accessible-placeholder-text: "Downloaded \{torrent.downloaded_bytes}/\{torrent.total_bytes} bytes";
-                                    progress: torrent.downloaded_bytes / torrent.total_bytes;
+                                    accessible-placeholder-text: "Downloaded \{torrent.progress}%";
+                                    progress: torrent.progress;
                                     height: parent.height - 2px;
                                     width: parent.width / 3;
                                 }
