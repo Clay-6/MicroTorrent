@@ -69,33 +69,16 @@ component AddPopup {
     }
 }
 
-export component MainWindow inherits Window {
-    min-height: 350px;
-    min-width: 400px;
-    title: "MicroTorrent";
-    in property <[TorrentInfo]> torrents <=> torrent-list.info;
-    in property <[string]> peers <=> peers-list.peers;
-    in property <string> error_message;
-    // args are uri, save path
-    callback add_torrent(string, string);
-    callback remove_torrent(int);
-    callback show_error;
-    show_error => {
+component ErrorPopup {
+    public function show(err_text: string) {
+        error_message = err_text;
         err_popup.show();
     }
-    add_popup := AddPopup {
-        width: parent.width;
-        x: 0;
-        y: self.height / 2;
-        add_pressed(uri, path) => {
-            add_torrent(uri, path);
-        }
-    }
+
+    property <string> error_message;
 
     err_popup := PopupWindow {
-        x: 0px;
-        y: 0px;
-        close-on-click: false;
+        close-policy: PopupClosePolicy.no-auto-close;
         Rectangle {
             width: 100%;
             height: 100%;
@@ -121,6 +104,35 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+}
+
+export component MainWindow inherits Window {
+    min-height: 350px;
+    min-width: 400px;
+    title: "MicroTorrent";
+    in property <[TorrentInfo]> torrents <=> torrent-list.info;
+    in property <[string]> peers <=> peers-list.peers;
+    in property <string> error_message;
+    // args are uri, save path
+    callback add_torrent(string, string);
+    callback remove_torrent(int);
+    callback show_error(string);
+    show_error(msg) => {
+        err_popup.show(msg);
+    }
+    add_popup := AddPopup {
+        width: parent.width;
+        x: 0;
+        y: self.height / 2;
+        add_pressed(uri, path) => {
+            add_torrent(uri, path);
+        }
+    }
+
+    err_popup := ErrorPopup {
+        x: 0px;
+        y: 0px;
     }
 
     TabWidget {

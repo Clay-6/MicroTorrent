@@ -66,8 +66,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 slint::invoke_from_event_loop([req, &ui_weak]() {
                     std::string msg = "Torrent '" + req.uri + "' is invalid";
                     auto ui = *ui_weak.lock();
-                    ui->set_error_message(slint::SharedString(msg));
-                    ui->invoke_show_error();
+                    ui->invoke_show_error(slint::SharedString(msg));
                 });
             }
         }
@@ -138,8 +137,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 slint::SharedString msg = slint::SharedString(a->message());
                 slint::invoke_from_event_loop([msg, &ui_weak]() {
                     auto ui = *ui_weak.lock();
-                    ui->set_error_message(msg);
-                    ui->invoke_show_error();
+                    ui->invoke_show_error(msg);
                 });
                 h.save_resume_data(lt::torrent_handle::only_if_modified |
                                    lt::torrent_handle::save_info_dict);
