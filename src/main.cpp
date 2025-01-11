@@ -38,11 +38,11 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
         if (shut_down) {
             shut_down = false;
+            done = true;
             for (auto const &h: ses.get_torrents()) {
                 h.save_resume_data(
                         lt::torrent_handle::only_if_modified |
                         lt::torrent_handle::save_info_dict);
-                done = true;
             }
         }
 
@@ -200,6 +200,8 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             }
             last_save_resume = clk::now();
         }
+
+        if (done) goto done;
     }
 
     done:
