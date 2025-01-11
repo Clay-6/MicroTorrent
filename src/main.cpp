@@ -103,7 +103,6 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             // update ui to remove torrent
             if (auto alert = lt::alert_cast<lt::torrent_removed_alert>(a)) {
                 std::string name = alert->torrent_name();
-                std::cout << name << '\n';
                 // remove the torrent from our lists
                 for (int i = 0; i < infos->row_count(); i++) {
                     TorrentInfo info = *infos->row_data(i);
@@ -132,11 +131,16 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                                                    lt::torrent_handle::save_info_dict);
             }
 
-            // if we receive an error, give up
+            // if we receive an error, display it
             if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
                 lt::torrent_handle h = alert->handle;
                 std::cout << a->message() << std::endl;
-                done = true;
+                slint::SharedString msg = slint::SharedString(a->message());
+                slint::invoke_from_event_loop([msg, &ui_weak]() {
+                    auto ui = *ui_weak.lock();
+                    ui->set_error_message(msg);
+                    ui->invoke_show_error();
+                });
                 h.save_resume_data(lt::torrent_handle::only_if_modified |
                                    lt::torrent_handle::save_info_dict);
             }
