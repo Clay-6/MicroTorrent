@@ -109,7 +109,7 @@ component ErrorPopup {
 
 export component MainWindow inherits Window {
     min-height: 350px;
-    min-width: 400px;
+    min-width: 410px;
     title: "MicroTorrent";
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
@@ -158,12 +158,10 @@ export component MainWindow inherits Window {
                             border-color: grey;
                             height: 20px;
                             width: parent.width;
-
                             HorizontalLayout {
-                                x: 3px;
+                                padding: 3px;
                                 // Torrent name
                                 Text {
-
                                     text: torrent.name;
                                     width: parent.width / 3 - 5px;
                                     overflow: elide;
@@ -173,17 +171,32 @@ export component MainWindow inherits Window {
                                 ProgressIndicator {
                                     accessible-placeholder-text: "Downloaded \{torrent.progress}%";
                                     progress: torrent.progress;
-                                    height: parent.height - 2px;
+                                    height: parent.height - 3px;
                                     width: parent.width / 3;
                                 }
 
                                 // Remove Button
-                                Button {
-                                    text: "Remove";
+                                Rectangle {
+                                    border-width: 3px;
+                                    border-color: Palette.border;
+                                    background: red;
+                                    border-radius: 0.25rem;
                                     width: parent.width / 3;
-                                    height: parent.height - 2px;
-                                    clicked => {
-                                        remove_torrent(torrent.ses_id);
+                                    height: parent.height - 3px;
+                                    TouchArea {
+                                        clicked => {
+                                            remove_torrent(torrent.ses-id);
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "Remove";
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+
+//                                    clicked => {
+//                                        remove_torrent(torrent.ses_id);
+//                                    }
                                     }
                                 }
                             }
