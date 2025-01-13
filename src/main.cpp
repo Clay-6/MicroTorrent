@@ -50,13 +50,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         while (!add_reqs.empty()) {
             mt::add_request req{};
             add_reqs >> req;
-            // if it has quotes around it, we WILL die so must remove them
-            if (req.uri.starts_with('"') || req.uri.starts_with('\'')) {
-                req.uri.erase(0, 1);
-            }
-            if (req.uri.ends_with('"') || req.uri.ends_with('\'')) {
-                req.uri.erase(req.uri.size() - 1, 1);
-            }
+
             // if this fails, we don't want to just crash
             try {
                 lt::add_torrent_params atp = mt::load_torrent(req.uri);
@@ -86,22 +80,6 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         while (!create_reqs.empty()) {
             mt::create_request req{};
             create_reqs >> req;
-
-            // remove quotes from folder
-            if (req.folder.starts_with('"') || req.folder.starts_with('\'')) {
-                req.folder.erase(0, 1);
-            }
-            if (req.folder.ends_with('"') || req.folder.ends_with('\'')) {
-                req.folder.erase(req.folder.size() - 1, 1);
-            }
-
-            // remove quotes from torrent path
-            if (req.save_path.starts_with('"') || req.save_path.starts_with('\'')) {
-                req.save_path.erase(0, 1);
-            }
-            if (req.save_path.ends_with('"') || req.save_path.ends_with('\'')) {
-                req.save_path.erase(req.save_path.size() - 1, 1);
-            }
 
             mt::create_torrent(req.folder, req.save_path);
         }
@@ -305,15 +283,23 @@ int main(int argc, char const *argv[]) try {
 
     // set up request callbacks
     ui->on_add_torrent([&](const auto &torrent, const auto &save_path) {
-        mt::add_request req{std::string(torrent), std::string(save_path)};
+        mt::add_request req{
+            mt::sanitise_path(torrent),
+            mt::sanitise_path(save_path)
+        };
+
         add_channel << req;
     });
     ui->on_remove_torrent([&](const auto &id) {
         mt::remove_request req{id};
+
         remove_channel << req;
     });
     ui->on_create_torrent([&](const auto &folder, const auto &save_path) {
-        mt::create_request req{std::string(folder), std::string(save_path)};
+        mt::create_request req{
+            mt::sanitise_path(folder),
+            mt::sanitise_path(save_path)
+        };
         create_channel << req;
     });
 

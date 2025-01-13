@@ -109,6 +109,18 @@ namespace mt {
 
     }
 
+    std::string sanitise_path(const std::string_view &provided) {
+        std::string path(provided);
+        if (path.starts_with('"') || path.starts_with('\'')) {
+            path.erase(0, 1);
+        }
+        if (path.ends_with('"') || path.ends_with('\'')) {
+            path.erase(path.size() - 1, 1);
+        }
+
+        return path;
+    }
+
     const char *state(lt::torrent_status::state_t s) {
 #ifdef __clang__
 #pragma clang diagnostic push

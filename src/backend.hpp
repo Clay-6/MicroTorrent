@@ -39,6 +39,11 @@ namespace mt {
     /// @brief Create a torrent file for a folder & save it to the provided path
     void create_torrent(const std::string &folder, const std::string_view &save_path);
 
+    /// @brief Sanitise the given path for use with libtorrent functions, transforming it in-place
+    ///
+    /// Removes double (`"`) & single (`'`) quotes from the ends
+    std::string sanitise_path(const std::string_view &path);
+
     struct add_request {
         std::string uri;
         std::string save_path;
