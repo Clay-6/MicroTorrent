@@ -27,7 +27,8 @@ namespace {
 }  // anonymous namespace
 
 void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
-                msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs) {
+                msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs,
+                msd::channel<mt::create_request> &create_reqs) {
     // info for all the torrents to be displayed in the UI
     auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>();
     // set when we're exiting
@@ -80,6 +81,13 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                     break;
                 }
             }
+        }
+
+        while (!create_reqs.empty()) {
+            mt::create_request req{};
+            create_reqs >> req;
+
+            mt::create_torrent(req.folder, req.save_path);
         }
 
         // handle the alerts
@@ -277,6 +285,7 @@ int main(int argc, char const *argv[]) try {
     // set up channels
     msd::channel<mt::add_request> add_channel;
     msd::channel<mt::remove_request> remove_channel;
+    msd::channel<mt::create_request> create_channel;
 
     // set up request callbacks
     ui->on_add_torrent([&](const auto &torrent, const auto &save_path) {
@@ -287,11 +296,15 @@ int main(int argc, char const *argv[]) try {
         mt::remove_request req{id};
         remove_channel << req;
     });
+    ui->on_create_torrent([&](const auto &folder, const auto &save_path) {
+        mt::create_request req{std::string(folder), std::string(save_path)};
+        create_channel << req;
+    });
 
     slint::ComponentWeakHandle<MainWindow> ui_weak(ui);
 
-    std::thread event_thread{[ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel]() {
-        event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel);
+    std::thread event_thread{[ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel, &create_channel]() {
+        event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel, create_channel);
     }};
 
 

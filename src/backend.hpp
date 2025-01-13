@@ -36,6 +36,9 @@ namespace mt {
     /// Will throw an exception if parsing fails
     lt::add_torrent_params load_torrent(const std::string &torrent);
 
+    /// @brief Create a torrent file for a folder & save it to the provided path
+    void create_torrent(const std::string &folder, const std::string_view &save_path);
+
     struct add_request {
         std::string uri;
         std::string save_path;
@@ -43,5 +46,10 @@ namespace mt {
 
     struct remove_request {
         int id;
+    };
+
+    struct create_request {
+        std::string folder;
+        std::string save_path;
     };
 } // namespace mt

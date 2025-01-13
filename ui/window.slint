@@ -116,6 +116,7 @@ export component MainWindow inherits Window {
     in property <string> error_message;
     // args are uri, save path
     callback add_torrent(string, string);
+    callback create_torrent(string, string);
     callback remove_torrent(int);
     callback show_error(string);
     show_error(msg) => {
@@ -222,6 +223,31 @@ export component MainWindow inherits Window {
 
         Tab {
             title: "Options";
+
+            VerticalBox {
+                GroupBox {
+                    title: "Create a torrent";
+                    height: 30% * root.height;
+
+                    VerticalBox {
+                        path := LineEdit {
+                            placeholder-text: "Path to file/folder";
+                        }
+
+                        save_to := LineEdit {
+                            placeholder-text: "Path to save torrent file to";
+                        }
+
+                        Button {
+                            text: "Create";
+                            padding-bottom: 3px;
+                            clicked => {
+                                create_torrent(path.text, save_to.text);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

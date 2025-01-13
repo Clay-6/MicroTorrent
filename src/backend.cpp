@@ -8,6 +8,8 @@
 #include <iostream>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/load_torrent.hpp>
+#include <libtorrent/create_torrent.hpp>
+
 
 namespace mt {
     std::string storage_dir() noexcept {
@@ -80,6 +82,30 @@ namespace mt {
         of.unsetf(std::ios_base::skipws);
         const std::vector<char> b = lt::write_resume_data_buf(alert->params);
         of.write(b.data(), int(b.size()));
+    }
+
+    void create_torrent(const std::string &folder, const std::string_view &save_path) {
+        lt::file_storage fs;
+        lt::add_files(fs, folder);
+        fs::path folder_path(folder);
+
+        lt::create_torrent torrent(fs);
+        torrent.set_creator("microtorrent");
+        lt::set_piece_hashes(torrent, folder_path.parent_path().string());
+
+        fs::path file_location;
+        if (save_path.empty()) {
+            // make a torrent file next to the desired folder with the `.torrent` extension
+            // e.g. for `./folder`, file will be `./folder.torrent`
+            file_location = folder_path.replace_extension(".torrent");
+        } else {
+            file_location = fs::path(save_path);
+        }
+        std::ofstream out(file_location, std::ios_base::binary);
+
+        std::vector<char> buf = torrent.generate_buf();
+        out.write(buf.data(), buf.size());
+
     }
 
     const char *state(lt::torrent_status::state_t s) {
