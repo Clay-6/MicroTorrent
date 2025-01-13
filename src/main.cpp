@@ -166,6 +166,10 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                               << (s.progress_ppm / 10000) << "%) downloaded ("
                               << s.num_peers << " peers)\x1b[K";
                     std::cout.flush();
+
+                    if (!(s.handle.is_valid() && s.handle.in_session())) {
+                        break;
+                    }
                     std::vector<lt::peer_info> these_peers;
                     s.handle.get_peer_info(these_peers);
                     // we're only allowed to edit the overall peer list from slint's event loop, so do that
