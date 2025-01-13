@@ -102,6 +102,7 @@ namespace mt {
             file_location = fs::path(save_path);
         }
         std::ofstream out(file_location, std::ios_base::binary);
+        out.clear(); // just overwrite anything that's already here
 
         std::vector<char> buf = torrent.generate_buf();
         out.write(buf.data(), buf.size());
