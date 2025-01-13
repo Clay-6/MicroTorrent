@@ -87,6 +87,22 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             mt::create_request req{};
             create_reqs >> req;
 
+            // remove quotes from folder
+            if (req.folder.starts_with('"') || req.folder.starts_with('\'')) {
+                req.folder.erase(0, 1);
+            }
+            if (req.folder.ends_with('"') || req.folder.ends_with('\'')) {
+                req.folder.erase(req.folder.size() - 1, 1);
+            }
+
+            // remove quotes from torrent path
+            if (req.save_path.starts_with('"') || req.save_path.starts_with('\'')) {
+                req.save_path.erase(0, 1);
+            }
+            if (req.save_path.ends_with('"') || req.save_path.ends_with('\'')) {
+                req.save_path.erase(req.save_path.size() - 1, 1);
+            }
+
             mt::create_torrent(req.folder, req.save_path);
         }
 
