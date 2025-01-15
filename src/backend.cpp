@@ -84,12 +84,21 @@ namespace mt {
         of.write(b.data(), int(b.size()));
     }
 
-    void create_torrent(const std::string &folder, const std::string_view &save_path) {
+    void
+    create_torrent(const std::string &folder, const std::string_view &save_path, const std::string &tracker_url) {
+        // This is a libtorrent precondition so if it doesn't hold we get eviscerated
+        if (folder.empty()) {
+            throw std::exception("Must specify a path to create torrent for");
+        }
+
         lt::file_storage fs;
         lt::add_files(fs, folder);
         fs::path folder_path(folder);
 
         lt::create_torrent torrent(fs);
+        if (!tracker_url.empty()) {
+            torrent.add_tracker(tracker_url);
+        }
         torrent.set_creator("microtorrent");
         lt::set_piece_hashes(torrent, folder_path.parent_path().string());
 

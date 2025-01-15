@@ -37,7 +37,7 @@ namespace mt {
     lt::add_torrent_params load_torrent(const std::string &torrent);
 
     /// @brief Create a torrent file for a folder & save it to the provided path
-    void create_torrent(const std::string &folder, const std::string_view &save_path);
+    void create_torrent(const std::string &folder, const std::string_view &save_path, const std::string &tracker_url);
 
     /// @brief Sanitise the given path for use with libtorrent functions, transforming it in-place
     ///
@@ -56,5 +56,6 @@ namespace mt {
     struct create_request {
         std::string folder;
         std::string save_path;
+        std::string tracker_url;
     };
 } // namespace mt
