@@ -230,33 +230,8 @@ export component MainWindow inherits Window {
 
             VerticalBox {
                 GroupBox {
-                    title: "Create a torrent";
-
-                    VerticalBox {
-                        path := LineEdit {
-                            placeholder-text: "Path to file/folder";
-                        }
-
-                        save_to := LineEdit {
-                            placeholder-text: "Path to save torrent file to";
-                        }
-
-                        tracker := LineEdit {
-                            placeholder-text: "(Optional) Tracker URL";
-                        }
-
-                        Button {
-                            text: "Create";
-                            padding-bottom: 3px;
-                            clicked => {
-                                create_torrent(path.text, save_to.text, tracker.text);
-                            }
-                        }
-                    }
-                }
-
-                GroupBox {
                     title: "Blocked peers (\{blocked-list.blacklist.length})";
+                    preferred-height: 70% * root.height;
                     VerticalBox {
                         blocked-list := ListView {
                             property <[string]> blacklist: ["1", "2", "3"];
@@ -281,6 +256,32 @@ export component MainWindow inherits Window {
                             placeholder-text: "127.0.0.1";
                             accepted => {
                                 block_ip(new_block.text);
+                            }
+                        }
+                    }
+                }
+
+                GroupBox {
+                    title: "Create a torrent";
+
+                    VerticalBox {
+                        path := LineEdit {
+                            placeholder-text: "Path to file/folder";
+                        }
+
+                        save_to := LineEdit {
+                            placeholder-text: "Path to save torrent file to";
+                        }
+
+                        tracker := LineEdit {
+                            placeholder-text: "(Optional) Tracker URL";
+                        }
+
+                        Button {
+                            text: "Create";
+                            padding-bottom: 3px;
+                            clicked => {
+                                create_torrent(path.text, save_to.text, tracker.text);
                             }
                         }
                     }
