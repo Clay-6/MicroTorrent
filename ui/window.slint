@@ -116,7 +116,7 @@ export component MainWindow inherits Window {
     in property <string> error_message;
     // args are uri, save path
     callback add_torrent(string, string);
-    callback create_torrent(string, string);
+    callback create_torrent(string, string, string);
     callback remove_torrent(int);
     callback show_error(string);
     show_error(msg) => {
@@ -238,11 +238,15 @@ export component MainWindow inherits Window {
                             placeholder-text: "Path to save torrent file to";
                         }
 
+                        tracker := LineEdit {
+                            placeholder-text: "(Optional) Tracker URL";
+                        }
+
                         Button {
                             text: "Create";
                             padding-bottom: 3px;
                             clicked => {
-                                create_torrent(path.text, save_to.text);
+                                create_torrent(path.text, save_to.text, tracker.text);
                             }
                         }
                     }
