@@ -116,11 +116,13 @@ export component MainWindow inherits Window {
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
     in property <string> error_message;
+    in-out property <[string]> blocked_peers <=> blocked-list.blacklist;
     // args are uri, save path
     callback add_torrent(string, string);
     callback create_torrent(string, string, string);
     callback remove_torrent(int);
     callback show_error(string);
+    callback block_ip(string);
     show_error(msg) => {
         err_popup.show(msg);
     }
@@ -229,7 +231,6 @@ export component MainWindow inherits Window {
             VerticalBox {
                 GroupBox {
                     title: "Create a torrent";
-                    height: 30% * root.height;
 
                     VerticalBox {
                         path := LineEdit {
@@ -249,6 +250,37 @@ export component MainWindow inherits Window {
                             padding-bottom: 3px;
                             clicked => {
                                 create_torrent(path.text, save_to.text, tracker.text);
+                            }
+                        }
+                    }
+                }
+
+                GroupBox {
+                    title: "Blocked peers (\{blocked-list.blacklist.length})";
+                    VerticalBox {
+                        blocked-list := ListView {
+                            property <[string]> blacklist: ["1", "2", "3"];
+                            for peer in blacklist: Rectangle {
+                                border-width: 1px;
+                                border-color: grey;
+                                height: 20px;
+                                width: parent.width;
+                                Text {
+                                    x: 3px;
+                                    text: peer;
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "Blacklist an IP address:";
+                        }
+
+                        new_block := LineEdit {
+                            accessible-role: text-input;
+                            placeholder-text: "127.0.0.1";
+                            accepted => {
+                                block_ip(new_block.text);
                             }
                         }
                     }
