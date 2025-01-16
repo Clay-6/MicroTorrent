@@ -117,10 +117,14 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             auto ipv6 = std::get<1>(ranges);
 
             for (const auto &range: ipv4) {
-                new_blocklist.emplace_back(range.first.to_string());
+                if (range.flags == lt::ip_filter::blocked) {
+                    new_blocklist.emplace_back(range.first.to_string());
+                }
             }
             for (const auto &range: ipv6) {
-                new_blocklist.emplace_back(range.first.to_string());
+                if (range.flags == lt::ip_filter::blocked) {
+                    new_blocklist.emplace_back(range.first.to_string());
+                }
             }
 
             slint::invoke_from_event_loop([new_blocklist, &ui_weak]() {
