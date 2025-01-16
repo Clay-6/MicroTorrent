@@ -77,7 +77,7 @@ namespace mt {
          * easy to generate. The torrent name fits the second perfectly and _mostly_ fits the first.
          * infohash would be better but that can't be a filename unfortunately
          * */
-        std::string path = storage_dir() + "/resume-files/" + alert->handle.name() + ".resume_file";
+        std::string path = storage_dir() + "/resume-files/" + alert->torrent_name() + ".resume_file";
         std::ofstream of(path, std::ios_base::binary);
         of.unsetf(std::ios_base::skipws);
         const std::vector<char> b = lt::write_resume_data_buf(alert->params);
@@ -129,32 +129,4 @@ namespace mt {
 
         return path;
     }
-
-    const char *state(lt::torrent_status::state_t s) {
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
-#endif
-        switch (s) {
-            case lt::torrent_status::checking_files:
-                return "checking";
-            case lt::torrent_status::downloading_metadata:
-                return "dl metadata";
-            case lt::torrent_status::downloading:
-                return "downloading";
-            case lt::torrent_status::finished:
-                return "finished";
-            case lt::torrent_status::seeding:
-                return "seeding";
-            case lt::torrent_status::checking_resume_data:
-                return "checking resume";
-            default:
-                return "<>";
-        }
-
-    }
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
 } // namespace mt
