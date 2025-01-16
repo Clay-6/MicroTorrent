@@ -123,6 +123,7 @@ export component MainWindow inherits Window {
     callback remove_torrent(int);
     callback show_error(string);
     callback block_ip(string);
+    callback unblock_ip(string);
     show_error(msg) => {
         err_popup.show(msg);
     }
@@ -245,6 +246,27 @@ export component MainWindow inherits Window {
                                 Text {
                                     x: 3px;
                                     text: peer;
+                                }
+
+                                // Remove Button
+                                Rectangle {
+                                    border-width: 3px;
+                                    border-color: Palette.border;
+                                    background: red;
+                                    border-radius: 0.25rem;
+                                    width: parent.width / 3;
+                                    height: parent.height - 3px;
+                                    TouchArea {
+                                        clicked => {
+                                            unblock_ip(peer);
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "Unblock";
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
                                 }
                             }
                         }
