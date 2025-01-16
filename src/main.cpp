@@ -128,16 +128,24 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             blacklist_updates >> req;
             lt::ip_filter filter = ses.get_ip_filter();
 
-            if (req.action == mt::BlacklistUpdate::Add) {
-
-                lt::address address = boost::asio::ip::make_address(std::string(req.ip));
-
-                filter.add_rule(address, address, lt::ip_filter::blocked);
-
-                ses.set_ip_filter(filter);
-            } else if (req.action == mt::BlacklistUpdate::Remove) {
-
+            boost::system::error_code ec;
+            lt::address address = boost::asio::ip::make_address(req.ip, ec);
+            if (ec) {
+                slint::SharedString msg("`" + req.ip + "` is not a valid IP address");
+                slint::invoke_from_event_loop([msg, &ui_weak]() {
+                    auto ui = ui_weak.lock();
+                    ui.value()->invoke_show_error(msg);
+                });
+                continue; // Skip this one, the IP address is invalid
             }
+
+            if (req.action == mt::BlacklistUpdate::Add) {
+                filter.add_rule(address, address, lt::ip_filter::blocked);
+            } else if (req.action == mt::BlacklistUpdate::Remove) {
+                filter.add_rule(address, address, 0 /* allowed */);
+            }
+
+            ses.set_ip_filter(filter);
 
             auto ranges = filter.export_filter();
             update_blacklist(std::get<0>(ranges), std::get<1>(ranges), ui_weak);
@@ -365,6 +373,10 @@ int main(int argc, char const *argv[]) try {
     });
     ui->on_block_ip([&](const auto &ip) {
         mt::update_blacklist_request req(std::string(ip), mt::BlacklistUpdate::Add);
+        block_channel << req;
+    });
+    ui->on_unblock_ip([&](const auto &ip) {
+        mt::update_blacklist_request req(std::string(ip), mt::BlacklistUpdate::Remove);
         block_channel << req;
     });
 
