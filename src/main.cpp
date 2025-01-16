@@ -119,11 +119,17 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             for (const auto &range: ipv4) {
                 if (range.flags == lt::ip_filter::blocked) {
                     new_blocklist.emplace_back(range.first.to_string());
+                    if (range.first != range.last) {
+                        new_blocklist.emplace_back(range.last.to_string());
+                    }
                 }
             }
             for (const auto &range: ipv6) {
                 if (range.flags == lt::ip_filter::blocked) {
                     new_blocklist.emplace_back(range.first.to_string());
+                    if (range.first != range.last) {
+                        new_blocklist.emplace_back(range.last.to_string());
+                    }
                 }
             }
 
