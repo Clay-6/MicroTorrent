@@ -58,4 +58,14 @@ namespace mt {
         std::string save_path;
         std::string tracker_url;
     };
+
+    enum class BlacklistUpdate {
+        Add,
+        Remove,
+    };
+
+    struct update_blacklist_request {
+        std::string ip;
+        BlacklistUpdate action;
+    };
 } // namespace mt

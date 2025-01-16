@@ -29,7 +29,8 @@ namespace {
 
 void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
                 msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs,
-                msd::channel<mt::create_request> &create_reqs, msd::channel<std::string> &block_reqs) {
+                msd::channel<mt::create_request> &create_reqs,
+                msd::channel<mt::update_blacklist_request> &blacklist_updates) {
     // info for all the torrents to be displayed in the UI
     auto infos = std::make_shared<slint::VectorModel<TorrentInfo>>();
     // set when we're exiting
@@ -93,31 +94,38 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             }
         }
 
-        while (!block_reqs.empty()) {
-            std::string ip;
-            block_reqs >> ip;
+        while (!blacklist_updates.empty()) {
+            mt::update_blacklist_request req;
+            blacklist_updates >> req;
 
+            std::vector<slint::SharedString> new_blocklist;
             lt::ip_filter filter = ses.get_ip_filter();
-            lt::address address = boost::asio::ip::make_address(std::string(ip));
 
-            filter.add_rule(address, address, lt::ip_filter::blocked);
+
+            if (req.action == mt::BlacklistUpdate::Add) {
+
+                lt::address address = boost::asio::ip::make_address(std::string(req.ip));
+
+                filter.add_rule(address, address, lt::ip_filter::blocked);
+
+                ses.set_ip_filter(filter);
+            } else if (req.action == mt::BlacklistUpdate::Remove) {
+
+            }
             auto ranges = filter.export_filter();
             auto ipv4 = std::get<0>(ranges);
             auto ipv6 = std::get<1>(ranges);
 
-            std::vector<slint::SharedString> blocked;
             for (const auto &range: ipv4) {
-                blocked.push_back(slint::SharedString(range.first.to_string()));
+                new_blocklist.emplace_back(range.first.to_string());
             }
             for (const auto &range: ipv6) {
-                blocked.push_back(slint::SharedString(range.first.to_string()));
+                new_blocklist.emplace_back(range.first.to_string());
             }
 
-            ses.set_ip_filter(filter);
-
-            slint::invoke_from_event_loop([blocked, &ui_weak]() {
+            slint::invoke_from_event_loop([new_blocklist, &ui_weak]() {
                 auto blacklist = std::make_shared<slint::VectorModel<slint::SharedString>>();
-                blacklist->set_vector(blocked);
+                blacklist->set_vector(new_blocklist);
                 auto ui = ui_weak.lock();
                 ui.value()->set_blocked_peers(blacklist);
             });
@@ -319,7 +327,7 @@ int main(int argc, char const *argv[]) try {
     msd::channel<mt::add_request> add_channel;
     msd::channel<mt::remove_request> remove_channel;
     msd::channel<mt::create_request> create_channel;
-    msd::channel<std::string> block_channel;
+    msd::channel<mt::update_blacklist_request> block_channel;
 
     // set up request callbacks
     ui->on_add_torrent([&](const auto &torrent, const auto &save_path) {
@@ -344,7 +352,8 @@ int main(int argc, char const *argv[]) try {
         create_channel << req;
     });
     ui->on_block_ip([&](const auto &ip) {
-        block_channel << std::string(ip);
+        mt::update_blacklist_request req(std::string(ip), mt::BlacklistUpdate::Add);
+        block_channel << req;
     });
 
     slint::ComponentWeakHandle<MainWindow> ui_weak(ui);
