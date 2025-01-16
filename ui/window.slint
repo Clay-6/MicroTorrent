@@ -131,7 +131,9 @@ export component MainWindow inherits Window {
         x: 0;
         y: self.height / 2;
         add_pressed(uri, path) => {
-            add_torrent(uri, path);
+            if (uri != "") {
+                add_torrent(uri, path);
+            }
         }
     }
 
@@ -255,7 +257,9 @@ export component MainWindow inherits Window {
                             accessible-role: text-input;
                             placeholder-text: "127.0.0.1";
                             accepted => {
-                                block_ip(new_block.text);
+                                if (new_block.text != "") {
+                                    block_ip(new_block.text);
+                                }
                             }
                         }
                     }
@@ -281,7 +285,9 @@ export component MainWindow inherits Window {
                             text: "Create";
                             padding-bottom: 3px;
                             clicked => {
-                                create_torrent(path.text, save_to.text, tracker.text);
+                                if (path.text != "") {
+                                    create_torrent(path.text, save_to.text, tracker.text);
+                                }
                             }
                         }
                     }
