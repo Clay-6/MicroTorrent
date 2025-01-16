@@ -27,6 +27,35 @@ namespace {
 
 }  // anonymous namespace
 
+void update_blacklist(std::vector<lt::ip_range<lt::address_v4>> ipv4,
+                      std::vector<lt::ip_range<lt::address_v6>> ipv6, slint::ComponentWeakHandle<MainWindow> &ui_weak) {
+    std::vector<slint::SharedString> new_blocklist;
+
+    for (const auto &range: ipv4) {
+        if (range.flags == lt::ip_filter::blocked) {
+            new_blocklist.emplace_back(range.first.to_string());
+            if (range.first != range.last) {
+                new_blocklist.emplace_back(range.last.to_string());
+            }
+        }
+    }
+    for (const auto &range: ipv6) {
+        if (range.flags == lt::ip_filter::blocked) {
+            new_blocklist.emplace_back(range.first.to_string());
+            if (range.first != range.last) {
+                new_blocklist.emplace_back(range.last.to_string());
+            }
+        }
+    }
+
+    slint::invoke_from_event_loop([new_blocklist, &ui_weak]() {
+        auto blacklist = std::make_shared<slint::VectorModel<slint::SharedString>>();
+        blacklist->set_vector(new_blocklist);
+        auto ui = ui_weak.lock();
+        ui.value()->set_blocked_peers(blacklist);
+    });
+}
+
 void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::ComponentWeakHandle<MainWindow> ui_weak,
                 msd::channel<mt::add_request> &add_reqs, msd::channel<mt::remove_request> &del_reqs,
                 msd::channel<mt::create_request> &create_reqs,
@@ -97,10 +126,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         while (!blacklist_updates.empty()) {
             mt::update_blacklist_request req;
             blacklist_updates >> req;
-
-            std::vector<slint::SharedString> new_blocklist;
             lt::ip_filter filter = ses.get_ip_filter();
-
 
             if (req.action == mt::BlacklistUpdate::Add) {
 
@@ -112,33 +138,9 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             } else if (req.action == mt::BlacklistUpdate::Remove) {
 
             }
+
             auto ranges = filter.export_filter();
-            auto ipv4 = std::get<0>(ranges);
-            auto ipv6 = std::get<1>(ranges);
-
-            for (const auto &range: ipv4) {
-                if (range.flags == lt::ip_filter::blocked) {
-                    new_blocklist.emplace_back(range.first.to_string());
-                    if (range.first != range.last) {
-                        new_blocklist.emplace_back(range.last.to_string());
-                    }
-                }
-            }
-            for (const auto &range: ipv6) {
-                if (range.flags == lt::ip_filter::blocked) {
-                    new_blocklist.emplace_back(range.first.to_string());
-                    if (range.first != range.last) {
-                        new_blocklist.emplace_back(range.last.to_string());
-                    }
-                }
-            }
-
-            slint::invoke_from_event_loop([new_blocklist, &ui_weak]() {
-                auto blacklist = std::make_shared<slint::VectorModel<slint::SharedString>>();
-                blacklist->set_vector(new_blocklist);
-                auto ui = ui_weak.lock();
-                ui.value()->set_blocked_peers(blacklist);
-            });
+            update_blacklist(std::get<0>(ranges), std::get<1>(ranges), ui_weak);
         }
 
         // handle the alerts
@@ -370,7 +372,8 @@ int main(int argc, char const *argv[]) try {
 
     std::thread event_thread{
             [ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel, &create_channel, &block_channel]() {
-                event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel, create_channel, block_channel);
+                event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel, create_channel,
+                           block_channel);
             }};
 
 
