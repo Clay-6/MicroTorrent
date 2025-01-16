@@ -370,6 +370,10 @@ int main(int argc, char const *argv[]) try {
 
     slint::ComponentWeakHandle<MainWindow> ui_weak(ui);
 
+    // set up the IP blocklist
+    auto ranges = ses.get_ip_filter().export_filter();
+    update_blacklist(std::get<0>(ranges), std::get<1>(ranges), ui_weak);
+
     std::thread event_thread{
             [ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel, &create_channel, &block_channel]() {
                 event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel, create_channel,
