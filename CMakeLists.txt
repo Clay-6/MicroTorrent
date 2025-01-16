@@ -48,7 +48,7 @@ target_link_libraries(microtorrent PRIVATE torrent-rasterbar)
 # Get the channels lib
 if (NOT channel_POPULATED)
     FetchContent_Declare(channel URL https://github.com/andreiavrammsd/cpp-channel/archive/v0.8.3.zip)
-    FetchContent_Populate(channel)
+    FetchContent_MakeAvailable(channel)
     include_directories(${channel_SOURCE_DIR}/include)
     # OR
     # add_subdirectory(${channel_SOURCE_DIR}/)
