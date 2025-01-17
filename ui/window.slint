@@ -110,9 +110,10 @@ component ErrorPopup {
 }
 
 export component MainWindow inherits Window {
-    min-height: 350px;
-    min-width: 410px;
     title: "MicroTorrent";
+
+    min-height: 450px;
+    min-width: 400px;
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
     in property <string> error_message;
