@@ -1,6 +1,7 @@
 # MicroTorrent
 
-The universe's simplest & (possibly) smallest torrent client
+The universe's simplest & (possibly) smallest torrent client, written
+exclusively for a school project.
 
 Made with [Slint](https://slint.dev) for the UI and [libtorrent-rasterbar](https://libtorrent.org)
 for the Bittorrent implementation.
