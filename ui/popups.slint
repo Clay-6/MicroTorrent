@@ -1,0 +1,95 @@
+import { VerticalBox, HorizontalBox, Button, LineEdit, Palette } from "std-widgets.slint";
+
+export component AddPopup {
+    public function show() {
+        pw.show();
+    }
+    callback add_pressed(string, string);
+    min-width: 350px;
+    pw := PopupWindow {
+//        width: parent.width;
+//        height: parent.height;
+
+        x: 0px;
+        y: 0px;
+        close-policy: PopupClosePolicy.close-on-click-outside;
+        Rectangle {
+            width: 100%;
+            height: 100%;
+            background: Palette.background;
+            border-radius: 1rem;
+            border-color: Palette.border;
+            border-width: 2px;
+        }
+
+        VerticalBox {
+            uri := LineEdit {
+                placeholder-text: "Torrent file path or magnet link";
+            }
+
+            save_path := LineEdit {
+                placeholder-text: "Save path";
+            }
+
+            HorizontalBox {
+                Button {
+                    accessible-role: button;
+                    accessible-label: "Add torrent";
+                    text: "Add";
+                    clicked => {
+                        add_pressed(uri.text, save_path.text);
+                    }
+                }
+
+                Button {
+                    accessible-role: button;
+                    accessible-label: "Close error popup";
+                    text: "Close";
+                    clicked => {
+                        pw.close();
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component ErrorPopup {
+    public function show(err_text: string) {
+        error_message = err_text;
+        err_popup.show();
+    }
+
+    property <string> error_message;
+
+    err_popup := PopupWindow {
+        close-policy: PopupClosePolicy.no-auto-close;
+        Rectangle {
+            width: 100%;
+            height: 100%;
+            background: Palette.alternate-background;
+            border-radius: 1rem;
+            border-color: Palette.border;
+            border-width: 2px;
+        }
+
+        VerticalBox {
+            Text {
+                text: "An error has occured!";
+                horizontal-alignment: center;
+                font-weight: 800;
+            }
+
+            Text {
+                text: error_message;
+            }
+
+            Button {
+                text: "Ok";
+                clicked => {
+                    err_popup.close();
+                }
+            }
+        }
+    }
+}
