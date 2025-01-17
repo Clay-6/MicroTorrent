@@ -44,6 +44,9 @@ namespace mt {
     /// Removes double (`"`) & single (`'`) quotes from the ends
     std::string sanitise_path(const std::string_view &path);
 
+    /// @brief Return the name of a torrent state enum
+    const char *state(lt::torrent_status::state_t);
+
     struct add_request {
         std::string uri;
         std::string save_path;
