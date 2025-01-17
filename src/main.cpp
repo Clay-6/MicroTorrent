@@ -2,17 +2,16 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <thread>
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/write_resume_data.hpp>
-#include <thread>
+#include <libtorrent/ip_filter.hpp>
 #include <slint.h>
 #include <msd/channel.hpp>
-#include <libtorrent/ip_filter.hpp>
-
 
 #include "backend.hpp"
 #include "window.h"
@@ -27,8 +26,9 @@ namespace {
 
 }  // anonymous namespace
 
-void update_blacklist(std::vector<lt::ip_range<lt::address_v4>> ipv4,
-                      std::vector<lt::ip_range<lt::address_v6>> ipv6, slint::ComponentWeakHandle<MainWindow> &ui_weak) {
+void update_blacklist(const std::vector<lt::ip_range<lt::address_v4>> &ipv4,
+                      const std::vector<lt::ip_range<lt::address_v6>> &ipv6,
+                      slint::ComponentWeakHandle<MainWindow> &ui_weak) {
     std::vector<slint::SharedString> new_blocklist;
 
     for (const auto &range: ipv4) {
@@ -202,7 +202,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
             // if we receive an error, display it
             if (auto alert = lt::alert_cast<lt::torrent_error_alert>(a)) {
                 lt::torrent_handle h = alert->handle;
-                std::cout << a->message() << std::endl;
+                std::cerr << a->message() << std::endl;
                 slint::SharedString msg = slint::SharedString(a->message());
                 slint::invoke_from_event_loop([msg, &ui_weak]() {
                     auto ui = *ui_weak.lock();
@@ -229,12 +229,12 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
 
                 for (auto const &s: st->status) {
                     // print to console for debugging
-                    std::cout << '\r' << s.name << ": " << mt::state(s.state) << ' '
+                    std::cerr << '\r' << s.name << ": " << mt::state(s.state) << ' '
                               << (s.download_payload_rate / 1000) << " kB/s "
                               << (s.total_done / 1000) << " kB ("
                               << (s.progress_ppm / 10000) << "%) downloaded ("
                               << s.num_peers << " peers)\x1b[K";
-                    std::cout.flush();
+                    std::cerr.flush();
 
                     if (!(s.handle.is_valid() && s.handle.in_session())) {
                         break;
@@ -294,7 +294,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
     }
 
     done:
-    std::cout << "\nsaving session state" << std::endl;
+    std::cerr << "\nsaving session state" << std::endl;
     {
         std::ofstream of(mt::storage_dir() + "/.session", std::ios_base::binary);
         of.unsetf(std::ios_base::skipws);
@@ -303,7 +303,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
         of.write(b.data(), int(b.size()));
     }
 
-    std::cout << "\ndone, shutting down" << std::endl;
+    std::cerr << "\ndone, shutting down" << std::endl;
 }
 
 int main(int argc, char const *argv[]) try {
