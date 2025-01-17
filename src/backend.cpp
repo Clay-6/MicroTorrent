@@ -20,8 +20,8 @@ namespace mt {
         root_dir = getenv("APPDATA");
         root_dir += "/microtorrent";
 #elif __linux__
-        root_dir = getenv("HOME") + "/.microtorrent";
-        root_dir += "/.microtorrent"
+        root_dir = getenv("HOME");
+        root_dir += "/.microtorrent";
 #endif
         return root_dir;
     }
@@ -88,7 +88,7 @@ namespace mt {
     create_torrent(const std::string &folder, const std::string_view &save_path, const std::string &tracker_url) {
         // This is a libtorrent precondition so if it doesn't hold we get eviscerated
         if (folder.empty()) {
-            throw std::exception("Must specify a path to create torrent for");
+            throw std::invalid_argument("Must specify a path to create torrent for");
         }
 
         lt::file_storage fs;
