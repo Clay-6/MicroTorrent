@@ -84,12 +84,27 @@ export component MainWindow inherits Window {
                                 }
 
                                 // Torrent progress
-                                ProgressIndicator {
-                                    accessible-placeholder-text: "Downloaded \{torrent.progress}%";
-                                    progress: torrent.progress;
-                                    height: parent.height - 3px;
-                                    width: parent.width / 3;
-                                }
+                                if torrent.progress < 1:
+                                    ProgressIndicator {
+                                        accessible-placeholder-text: "Downloaded \{torrent.progress}%";
+                                        progress: torrent.progress;
+                                        height: parent.height - 3px;
+                                        width: parent.width / 3;
+                                    }
+                                if torrent.progress == 1:
+                                    Rectangle {
+                                        accessible-role: progress-indicator;
+                                        accessible-placeholder-text: "Download complete";
+                                        width: parent.width / 3;
+                                        height: parent.height - 3px;
+                                        background: green;
+                                        border-radius: 0.25rem;
+                                        Text {
+                                            text: "Complete";
+                                            horizontal-alignment: center;
+                                            vertical-alignment: center;
+                                        }
+                                    }
 
                                 // Remove Button
                                 Rectangle {
