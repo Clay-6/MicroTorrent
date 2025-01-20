@@ -11,6 +11,7 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 build
+build-release
 cmake-build-*
 
 .resume_file

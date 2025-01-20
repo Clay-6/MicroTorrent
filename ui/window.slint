@@ -67,7 +67,7 @@ export component MainWindow inherits Window {
 
                 GroupBox {
                     title: "Torrents";
-                    preferred-height: 70% * root.height;
+                    max-height: 70% * root.height;
                     torrent-list := ListView {
                         property <[TorrentInfo]> info;
                         for torrent in info: Rectangle {
@@ -134,7 +134,7 @@ export component MainWindow inherits Window {
 
                 GroupBox {
                     title: "Connected peers (\{peers.length})";
-                    height: 30% * root.height;
+                    min-height: 30% * root.height;
                     peers-list := ListView {
                         property <[string]> peers;
                         for peer in peers: Rectangle {
