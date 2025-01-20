@@ -20,7 +20,7 @@ export struct TorrentInfo {
 export component MainWindow inherits Window {
     title: "MicroTorrent";
 
-    min-height: 450px;
+    min-height: 500px;
     min-width: 400px;
     in property <[TorrentInfo]> torrents <=> torrent-list.info;
     in property <[string]> peers <=> peers-list.peers;
