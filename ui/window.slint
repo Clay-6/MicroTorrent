@@ -26,6 +26,7 @@ export component MainWindow inherits Window {
     in property <[string]> peers <=> peers-list.peers;
     in property <string> error_message;
     in-out property <[string]> blocked_peers <=> blocked-list.blacklist;
+    in-out property <string> colour-scheme <=> theme-selector.current-value;
     // args are uri, save path
     callback add_torrent(string, string);
     callback create_torrent(string, string, string);
@@ -33,8 +34,12 @@ export component MainWindow inherits Window {
     callback show_error(string);
     callback block_ip(string);
     callback unblock_ip(string);
+    callback theme_selected(string);
     show_error(msg) => {
         err_popup.show(msg);
+    }
+    theme_selected(theme) => {
+        theme-selector.selected(theme);
     }
     add_popup := AddPopup {
         width: parent.width;
@@ -162,7 +167,7 @@ export component MainWindow inherits Window {
                         vertical-alignment: center;
                     }
 
-                    ComboBox {
+                    theme-selector := ComboBox {
                         model: ["dark", "light"];
                         current-value: Palette.color-scheme == ColorScheme.dark ? "dark" : "light";
                         current-index: Palette.color-scheme == ColorScheme.dark ? 0 : 1;

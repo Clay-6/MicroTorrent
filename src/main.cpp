@@ -386,6 +386,14 @@ int main(int argc, char const *argv[]) try {
     auto ranges = ses.get_ip_filter().export_filter();
     update_blacklist(std::get<0>(ranges), std::get<1>(ranges), ui_weak);
 
+    // persist the saved colour theme
+    if (std::filesystem::exists(mt::storage_dir() + "/.colour_theme")) {
+        std::ifstream file(mt::storage_dir() + "/.colour_theme");
+        std::string theme;
+        std::getline(file, theme);
+        ui->invoke_theme_selected(slint::SharedString(theme));
+    }
+
     std::thread event_thread{
             [ui_weak, &ses, &last_save_resume, &add_channel, &remove_channel, &create_channel, &block_channel]() {
                 event_loop(ses, last_save_resume, ui_weak, add_channel, remove_channel, create_channel,
@@ -398,6 +406,12 @@ int main(int argc, char const *argv[]) try {
     // upon returning, the window has been closed so we need to stop the event loop
     shut_down = true;
     event_thread.join();
+
+    std::string theme = std::string(ui->get_colour_scheme());
+    std::ofstream file(mt::storage_dir() + "/.colour_theme");
+    file.clear();
+    file.write(theme.c_str(), theme.size());
+    file.close();
 } catch (std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
 }
