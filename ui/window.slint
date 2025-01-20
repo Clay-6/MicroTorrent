@@ -6,7 +6,8 @@ import { HorizontalBox,
          ProgressIndicator,
          GroupBox,
          TabWidget,
-         LineEdit
+         LineEdit,
+         ComboBox
         } from "std-widgets.slint";
 import { AddPopup, ErrorPopup } from "popups.slint";
 
@@ -155,6 +156,27 @@ export component MainWindow inherits Window {
             title: "Options";
 
             VerticalBox {
+                HorizontalBox {
+                    Text {
+                        text: "Colour theme:";
+                        vertical-alignment: center;
+                    }
+
+                    ComboBox {
+                        model: ["dark", "light"];
+                        current-value: Palette.color-scheme == ColorScheme.dark ? "dark" : "light";
+                        current-index: Palette.color-scheme == ColorScheme.dark ? 0 : 1;
+
+                        selected (val) => {
+                            if (val == "dark") {
+                                Palette.color-scheme = ColorScheme.dark;
+                            } else {
+                                Palette.color-scheme = ColorScheme.light;
+                            }
+                        }
+                    }
+                }
+
                 GroupBox {
                     title: "Blocked IPs (\{blocked-list.blacklist.length})";
                     preferred-height: 70% * root.height;
