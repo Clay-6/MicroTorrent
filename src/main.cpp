@@ -181,6 +181,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                             auto ui = *ui_weak.lock();
                             ui->set_torrents(infos);
                         });
+                        break;
                     }
                 }
 
@@ -285,6 +286,10 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
                 if (h.is_valid() && h.in_session()) {
                     h.save_resume_data(lt::torrent_handle::only_if_modified |
                                        lt::torrent_handle::save_info_dict);
+                    // to ensure that we can seed things, it helps to force
+                    // tracker/dht announces so that we can see new peers
+                    h.force_dht_announce();
+                    h.force_reannounce();
                 }
             }
             last_save_resume = clk::now();
