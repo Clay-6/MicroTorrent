@@ -10,8 +10,9 @@
 namespace mt {
     /// @brief Return the directory in which MicroTorrent will store all its data
     ///
-    /// $HOME/.microtorrent on Linux, and %USERPROFILE% on Windows
-    /// @return The storage directory path as a string
+    /// @return The storage directory path as a string;
+    ///
+    /// $HOME/.microtorrent on Linux, and %APPDATA%/microtorrent on Windows
     std::string storage_dir() noexcept;
 
     /// @brief Resume torrents that have been saved previously
@@ -39,9 +40,10 @@ namespace mt {
     /// @brief Create a torrent file for a folder & save it to the provided path
     void create_torrent(const std::string &folder, const std::string_view &save_path, const std::string &tracker_url);
 
-    /// @brief Sanitise the given path for use with libtorrent functions, transforming it in-place
+    /// @brief Sanitise the given path for use with libtorrent functions
     ///
     /// Removes double (`"`) & single (`'`) quotes from the ends
+    /// @returns The sanitised string
     std::string sanitise_path(const std::string_view &path);
 
     /// @brief Return the name of a torrent state enum
