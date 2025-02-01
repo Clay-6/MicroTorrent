@@ -311,7 +311,7 @@ void event_loop(lt::session &ses, clk::time_point last_save_resume, slint::Compo
     std::cerr << "\ndone, shutting down" << std::endl;
 }
 
-int main(int argc, char const *argv[]) try {
+int main() try {
     auto ui = MainWindow::create();
 
     // create the storage directory if it doesn't exist already
@@ -420,3 +420,11 @@ int main(int argc, char const *argv[]) try {
 } catch (std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
 }
+
+#ifdef WIN32
+#include <windows.h>
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+
+    return main();
+}
+#endif

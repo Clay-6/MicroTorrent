@@ -13,6 +13,9 @@ list(TRANSFORM source_files PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 add_executable(microtorrent ${source_files})
 
+# Run without the terminal
+set_property(TARGET microtorrent APPEND PROPERTY WIN32_EXECUTABLE TRUE)
+
 include(FetchContent)
 
 # Get slint
