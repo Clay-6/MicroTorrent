@@ -11,10 +11,14 @@ set(source_files
 
 list(TRANSFORM source_files PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
+# Set an env var so we know if we're in debug mode
+add_compile_definitions("MT_DEBUG=$<CONFIG:Debug>")
 add_executable(microtorrent ${source_files})
 
-# Run without the terminal
-set_property(TARGET microtorrent APPEND PROPERTY WIN32_EXECUTABLE TRUE)
+# Run without the terminal in release mode
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET microtorrent APPEND PROPERTY WIN32_EXECUTABLE TRUE)
+endif (CMAKE_BUILD_TYPE STREQUAL "Release")
 
 include(FetchContent)
 

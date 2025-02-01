@@ -421,10 +421,12 @@ int main() try {
     std::cerr << "Error: " << e.what() << std::endl;
 }
 
+#if not MT_DEBUG
 #ifdef WIN32
 #include <windows.h>
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 
     return main();
 }
+#endif
 #endif
